@@ -1,0 +1,19 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    class="shell__sidenav"
+    [class.shell__sidenav--collapsed]="sidebarCollapsed()"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+    [fixedInViewport]="true"
+    (closedStart)="mobileOpen.set(false)"
+  >
+    <app-sidebar [collapsed]="sidebarCollapsed()" (navigate)="closeMobile()" />
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell__content">
+    <app-toolbar (toggleSidebar)="toggle()" />
+    <main class="shell__main" id="main-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

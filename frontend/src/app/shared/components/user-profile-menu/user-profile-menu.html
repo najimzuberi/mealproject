@@ -1,0 +1,32 @@
+<button mat-button type="button" class="user-btn" [matMenuTriggerFor]="userMenu" aria-label="Account menu">
+  <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+  <span class="user-btn__meta">
+    <span class="user-btn__name">{{ auth.user()?.name }}</span>
+    <span class="user-btn__role">{{ auth.displayRole() }}</span>
+  </span>
+  <mat-icon>expand_more</mat-icon>
+</button>
+
+<mat-menu #userMenu="matMenu">
+  <a mat-menu-item routerLink="/app/coming-soon/profile">
+    <mat-icon>person</mat-icon>
+    <span>My Profile</span>
+  </a>
+  <a mat-menu-item routerLink="/app/coming-soon/account-settings">
+    <mat-icon>manage_accounts</mat-icon>
+    <span>Account Settings</span>
+  </a>
+  <a mat-menu-item routerLink="/app/coming-soon/change-password">
+    <mat-icon>password</mat-icon>
+    <span>Change Password</span>
+  </a>
+  <a mat-menu-item routerLink="/app/coming-soon/help">
+    <mat-icon>help_outline</mat-icon>
+    <span>Help & Support</span>
+  </a>
+  <mat-divider></mat-divider>
+  <button mat-menu-item type="button" (click)="auth.logout()">
+    <mat-icon>logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>

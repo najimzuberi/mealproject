@@ -1,0 +1,84 @@
+<section class="programme-page">
+  <app-page-header
+    title="Programmes"
+    subtitle="Group related projects under multi-year programmes."
+  />
+
+  <div class="programme-page__toolbar">
+    <form class="programme-page__filters" [formGroup]="filters" (ngSubmit)="reload()">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" placeholder="Name or code" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All</mat-option>
+          @for (status of statuses; track status) {
+            <mat-option [value]="status">{{ statusLabel(status) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">Filter</button>
+    </form>
+    <button mat-flat-button color="primary" type="button" (click)="openForm()">
+      <mat-icon>add</mat-icon>
+      Create programme
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading programmes…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (!items().length) {
+    <div class="programme-card">
+      <app-empty-state
+        title="No programmes yet"
+        message="Create a programme to organise related projects."
+        icon="folder_special"
+      />
+    </div>
+  } @else {
+    <div class="programme-card programme-table-wrap">
+      <table mat-table [dataSource]="items()" class="programme-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row">
+            <a class="programme-link" [routerLink]="['/app/programme/programmes', row.id]">{{ row.name }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Code</th>
+          <td mat-cell *matCellDef="let row">{{ row.code || '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="programme-actions">
+              <button mat-icon-button type="button" matTooltip="View" (click)="view(row)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              @if (canEdit(row)) {
+                <button mat-icon-button type="button" matTooltip="Edit" (click)="openForm(row)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
+              <button mat-icon-button type="button" matTooltip="Delete" (click)="confirmDelete(row)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,164 @@
+<section class="learn-page">
+  @if (loading()) {
+    <app-loading-state message="Loading document…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (document(); as d) {
+    <div class="learn-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to knowledge
+        </button>
+        <app-page-header [title]="d.title" [subtitle]="d.code" />
+        <div class="learn-chip-row">
+          <app-status-chip [status]="d.status" [label]="statusLabel(d.status)" />
+          <span class="learn-muted">v{{ d.version ?? 1 }} · {{ statusLabel(d.access_level) }}</span>
+        </div>
+      </div>
+      <div class="learn-page__actions">
+        <input
+          #fileInput
+          type="file"
+          hidden
+          (change)="onFileSelected($event)"
+        />
+        @if (canEdit(d)) {
+          <button mat-stroked-button type="button" (click)="triggerUpload()">
+            <mat-icon>upload_file</mat-icon>
+            Upload file
+          </button>
+        }
+        @if (hasFile(d)) {
+          <button mat-stroked-button type="button" (click)="download()">
+            <mat-icon>download</mat-icon>
+            Download
+          </button>
+        }
+        @if (canArchive(d)) {
+          <button mat-stroked-button type="button" (click)="archive()">
+            <mat-icon>archive</mat-icon>
+            Archive
+          </button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="learn-card learn-card__body">
+          <div class="learn-meta">
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Category</span>
+              <span>{{ d.category || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Type</span>
+              <span>{{ d.document_type || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Programme</span>
+              <span>{{ d.programme?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Project</span>
+              <span>{{ d.project?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Department</span>
+              <span>{{ d.department?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Author</span>
+              <span>{{ d.author?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Published</span>
+              <span>{{ d.published_on ? (d.published_on | date: 'mediumDate') : '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">File</span>
+              <span>
+                @if (hasFile(d)) {
+                  {{ d.original_name || 'Attached file' }}
+                  ({{ formatSize(d.size) }})
+                } @else {
+                  No file uploaded
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Metadata">
+        <div class="learn-card learn-card__body">
+          @if (canEdit(d)) {
+            <form class="learn-form" [formGroup]="metaForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Title</mat-label>
+                <input matInput formControlName="title" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <input matInput formControlName="category" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Document type</mat-label>
+                <input matInput formControlName="document_type" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Access level</mat-label>
+                <mat-select formControlName="access_level">
+                  <mat-option value="public">Public</mat-option>
+                  <mat-option value="internal">Internal</mat-option>
+                  <mat-option value="restricted">Restricted</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Tags</mat-label>
+                <input matInput formControlName="tags" placeholder="comma-separated" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Keywords</mat-label>
+                <input matInput formControlName="keywords" placeholder="comma-separated" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <textarea matInput rows="3" formControlName="description"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>AI summary</mat-label>
+                <textarea matInput rows="3" formControlName="ai_summary"></textarea>
+              </mat-form-field>
+            </form>
+            <div class="learn-page__actions">
+              <button mat-flat-button color="primary" type="button" (click)="saveMeta()">
+                Save metadata
+              </button>
+            </div>
+          } @else {
+            <div class="learn-meta">
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Description</span>
+                <span class="learn-summary-text">{{ d.description || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Tags</span>
+                <span>{{ (d.tags || []).join(', ') || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Keywords</span>
+                <span>{{ (d.keywords || []).join(', ') || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">AI summary</span>
+                <span class="learn-summary-text">{{ d.ai_summary || '—' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

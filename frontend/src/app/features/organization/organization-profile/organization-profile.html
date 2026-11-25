@@ -1,0 +1,124 @@
+<section class="org-page">
+  <app-page-header
+    title="Organization Profile"
+    subtitle="Manage identity, contact details, and branding for the active organization."
+  />
+
+  @if (loading()) {
+    <app-loading-state message="Loading organization profile…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (profile(); as org) {
+    <div class="org-profile-grid">
+      <div class="org-card" style="padding: 1.25rem">
+        <form class="org-form org-form--wide" [formGroup]="form" (ngSubmit)="save()">
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Code</mat-label>
+            <input matInput formControlName="code" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Registration number</mat-label>
+            <input matInput formControlName="registration_number" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Type</mat-label>
+            <mat-select formControlName="type">
+              @for (type of types; track type) {
+                <mat-option [value]="type">{{ type }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput rows="3" formControlName="description"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Website</mat-label>
+            <input matInput formControlName="website" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Country</mat-label>
+            <input matInput formControlName="country" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Headquarters region</mat-label>
+            <input matInput formControlName="headquarters_region" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Address</mat-label>
+            <textarea matInput rows="2" formControlName="address"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Physical address</mat-label>
+            <textarea matInput rows="2" formControlName="physical_address"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Postal address</mat-label>
+            <textarea matInput rows="2" formControlName="postal_address"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Timezone</mat-label>
+            <input matInput formControlName="timezone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Default language</mat-label>
+            <input matInput formControlName="default_language" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Default currency</mat-label>
+            <input matInput formControlName="default_currency" />
+          </mat-form-field>
+          <div class="full-width org-dialog-actions">
+            <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+              {{ saving() ? 'Saving…' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="org-card" style="padding: 1.25rem">
+        <div class="org-profile-logo">
+          <div style="display: flex; align-items: center; gap: 0.75rem">
+            <h3 style="margin: 0; color: var(--mm-heading)">Branding</h3>
+            <app-status-chip [status]="org.status" />
+          </div>
+          @if (org.logo_url || org.logo_path) {
+            <img [src]="org.logo_url || org.logo_path" [alt]="org.name + ' logo'" />
+          } @else {
+            <div
+              style="
+                width: 7.5rem;
+                height: 7.5rem;
+                border-radius: 1rem;
+                border: 1px dashed var(--mm-border);
+                display: grid;
+                place-items: center;
+                color: var(--mm-body);
+              "
+            >
+              <mat-icon>apartment</mat-icon>
+            </div>
+          }
+          <input #logoInput type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+          <button mat-stroked-button type="button" (click)="logoInput.click()">
+            <mat-icon>upload</mat-icon>
+            Upload logo
+          </button>
+          <p class="org-muted">PNG or JPG up to 2MB.</p>
+        </div>
+      </div>
+    </div>
+  }
+</section>

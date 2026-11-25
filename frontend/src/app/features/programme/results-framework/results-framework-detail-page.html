@@ -1,0 +1,129 @@
+<section class="programme-page">
+  @if (loading()) {
+    <app-loading-state message="Loading results framework…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (framework(); as fw) {
+    <div class="programme-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to frameworks
+        </button>
+        <app-page-header [title]="fw.title" [subtitle]="'Project #' + fw.project_id" />
+        <div class="programme-chip-row">
+          <app-status-chip [status]="fw.status" [label]="statusLabel(fw.status)" />
+          @if (fw.version) {
+            <span class="programme-muted">Version {{ fw.version }}</span>
+          }
+        </div>
+      </div>
+      <div class="programme-page__actions">
+        @if (canEdit(fw)) {
+          <button mat-stroked-button type="button" (click)="openEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button mat-stroked-button type="button" (click)="openAddResult()">
+            <mat-icon>add</mat-icon>
+            Add result
+          </button>
+        }
+        @if (canSubmit(fw)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(fw)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canReturn(fw)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canActivate(fw)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('activate')">
+            Activate
+          </button>
+        }
+        @if (canArchive(fw)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('archive')">Archive</button>
+        }
+        <a mat-stroked-button [routerLink]="['/app/programme/projects', fw.project_id]">
+          View project
+        </a>
+      </div>
+    </div>
+
+    <div class="programme-card programme-card__body">
+      <h3 class="programme-section-title">Theory of change</h3>
+      <p>{{ fw.theory_of_change || '—' }}</p>
+    </div>
+
+    <div class="programme-card programme-card__body programme-hierarchy">
+      <div class="programme-page__toolbar">
+        <h3 class="programme-section-title">Results hierarchy</h3>
+        @if (canEdit(fw)) {
+          <button mat-stroked-button type="button" (click)="openAddResult()">
+            <mat-icon>add</mat-icon>
+            Add root result
+          </button>
+        }
+      </div>
+
+      @if (!tree().length) {
+        <app-empty-state
+          title="No results yet"
+          message="Add impact, outcome, output, or activity results to build the hierarchy."
+          icon="account_tree"
+        />
+      } @else {
+        @for (node of tree(); track node.id) {
+          <ng-container *ngTemplateOutlet="resultNode; context: { $implicit: node, editable: canEdit(fw) }" />
+        }
+      }
+    </div>
+
+    <ng-template #resultNode let-node let-editable="editable">
+      <mat-expansion-panel class="programme-hierarchy__node" [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="programme-hierarchy__level">{{ resultLevelLabel(node.level) }}</span>
+            {{ node.code ? node.code + ' · ' : '' }}{{ node.title }}
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ node.children?.length || 0 }} child(ren)
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        @if (node.description) {
+          <p class="programme-muted">{{ node.description }}</p>
+        }
+
+        @if (editable) {
+          <div class="programme-page__actions">
+            <button mat-stroked-button type="button" (click)="openAddResult(node)">
+              <mat-icon>add</mat-icon>
+              Add child
+            </button>
+            <button mat-stroked-button type="button" (click)="openEditResult(node)">
+              <mat-icon>edit</mat-icon>
+              Edit
+            </button>
+            <button mat-stroked-button type="button" (click)="linkIndicator(node)">
+              <mat-icon>link</mat-icon>
+              Link indicator
+            </button>
+          </div>
+        }
+
+        @for (child of node.children || []; track child.id) {
+          <div class="programme-hierarchy__child">
+            <ng-container *ngTemplateOutlet="resultNode; context: { $implicit: child, editable: editable }" />
+          </div>
+        }
+      </mat-expansion-panel>
+    </ng-template>
+  }
+</section>

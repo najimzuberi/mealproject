@@ -1,0 +1,143 @@
+<section class="meal-page">
+  @if (loading()) {
+    <app-loading-state message="Loading submission…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (submission(); as s) {
+    <div class="meal-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to data collection
+        </button>
+        <app-page-header
+          [title]="s.indicator?.name || ('Submission #' + s.id)"
+          [subtitle]="s.indicator?.code || ('Indicator #' + s.indicator_id)"
+        />
+        <div class="meal-chip-row">
+          <app-status-chip [status]="s.status" [label]="statusLabel(s.status)" />
+        </div>
+      </div>
+      <div class="meal-page__actions">
+        @if (canEdit(s)) {
+          <button mat-stroked-button type="button" (click)="saveDraft()">
+            <mat-icon>save</mat-icon>
+            Save
+          </button>
+        }
+        @if (canSubmit(s)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canVerify(s)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('verify')">
+            Verify
+          </button>
+        }
+        @if (canValidate(s)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('validate')">
+            Validate
+          </button>
+        }
+        @if (canApprove(s)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canPublish(s)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('publish')">
+            Publish
+          </button>
+        }
+        @if (canReturn(s)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Values">
+        <div class="meal-card meal-card__body">
+          <form class="meal-form meal-form--wide" [formGroup]="editForm">
+            <mat-form-field appearance="outline">
+              <mat-label>Value</mat-label>
+              <input matInput type="number" formControlName="value" [readonly]="!canEdit(s)" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Numerator</mat-label>
+              <input matInput type="number" formControlName="numerator" [readonly]="!canEdit(s)" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Denominator</mat-label>
+              <input matInput type="number" formControlName="denominator" [readonly]="!canEdit(s)" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Notes</mat-label>
+              <textarea matInput rows="3" formControlName="notes" [readonly]="!canEdit(s)"></textarea>
+            </mat-form-field>
+          </form>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Context">
+        <div class="meal-card meal-card__body">
+          <div class="meal-meta">
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Plan</span>
+              <span>{{ s.monitoring_plan?.title || ('#' + s.monitoring_plan_id) }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Plan item</span>
+              <span>#{{ s.monitoring_plan_item_id }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Unit</span>
+              <span>{{ s.indicator?.measurement_unit || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Submitted</span>
+              <span>{{ s.submitted_at || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Verified</span>
+              <span>{{ s.verified_at || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Validated</span>
+              <span>{{ s.validated_at || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Approved</span>
+              <span>{{ s.approved_at || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Published</span>
+              <span>{{ s.published_at || '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      @if (approvalEntries(s).length) {
+        <mat-tab label="History">
+          <div class="meal-card meal-card__body">
+            <ul>
+              @for (entry of approvalEntries(s); track entry.id ?? $index) {
+                <li>
+                  <strong>{{ entry.action || entry.status || 'Update' }}</strong>
+                  @if (entry.created_at) {
+                    <span class="meal-muted"> · {{ entry.created_at }}</span>
+                  }
+                  @if (entry.comment) {
+                    <p class="meal-muted">{{ entry.comment }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</section>

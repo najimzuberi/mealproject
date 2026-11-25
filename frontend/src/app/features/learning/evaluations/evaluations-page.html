@@ -1,0 +1,105 @@
+<section class="learn-page">
+  <app-page-header
+    title="Evaluations"
+    subtitle="Plan, review, and complete programme and project evaluations."
+  />
+
+  <div class="learn-page__toolbar">
+    <form class="learn-page__filters" [formGroup]="filters" (ngSubmit)="reload()">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" placeholder="Code or title" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All</mat-option>
+          @for (status of statuses; track status) {
+            <mat-option [value]="status">{{ statusLabel(status) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="evaluation_type">
+          <mat-option value="">All</mat-option>
+          @for (type of evaluationTypes; track type) {
+            <mat-option [value]="type">{{ statusLabel(type) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">Filter</button>
+    </form>
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      New evaluation
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading evaluations…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (!items().length) {
+    <div class="learn-card">
+      <app-empty-state
+        title="No evaluations yet"
+        message="Create an evaluation to document purpose, findings, and recommendations."
+        icon="rate_review"
+      />
+    </div>
+  } @else {
+    <div class="learn-card learn-table-wrap">
+      <table mat-table [dataSource]="items()" class="learn-table">
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Code</th>
+          <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Title</th>
+          <td mat-cell *matCellDef="let row">
+            <a class="learn-link" [routerLink]="['/app/learning/evaluations', row.id]">
+              {{ row.title }}
+            </a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let row">{{ statusLabel(row.evaluation_type) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="period">
+          <th mat-header-cell *matHeaderCellDef>Period</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.starts_on ? (row.starts_on | date: 'mediumDate') : '—' }}
+            –
+            {{ row.ends_on ? (row.ends_on | date: 'mediumDate') : '—' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="updated">
+          <th mat-header-cell *matHeaderCellDef>Updated</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.updated_at ? (row.updated_at | date: 'mediumDate') : '—' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="learn-actions">
+              <button mat-icon-button type="button" matTooltip="View" (click)="view(row)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  }
+</section>

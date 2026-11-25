@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Modules\AnnualWorkPlan\Resources;
+
+use App\Modules\AnnualWorkPlan\Models\AwpActivity;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/** @mixin AwpActivity */
+class AwpActivityResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'awp_priority_id' => $this->awp_priority_id,
+            'department_id' => $this->department_id,
+            'responsible_user_id' => $this->responsible_user_id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'deliverable' => $this->deliverable,
+            'budget_estimate' => $this->budget_estimate,
+            'starts_on' => $this->starts_on?->toDateString(),
+            'ends_on' => $this->ends_on?->toDateString(),
+            'status' => $this->status,
+            'milestones' => AwpMilestoneResource::collection($this->whenLoaded('milestones')),
+        ];
+    }
+}

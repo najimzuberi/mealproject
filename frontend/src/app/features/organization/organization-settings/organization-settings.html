@@ -1,0 +1,44 @@
+<section class="org-page">
+  <app-page-header
+    title="Organization Settings"
+    subtitle="Key/value configuration for the active organization."
+  />
+
+  @if (loading()) {
+    <app-loading-state message="Loading settings…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else {
+    <div class="org-card" style="padding: 1.25rem">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="org-settings-list" formArrayName="settings">
+          @for (row of settings.controls; track $index; let i = $index) {
+            <div class="org-settings-row" [formGroupName]="i">
+              <mat-form-field appearance="outline">
+                <mat-label>Key</mat-label>
+                <input matInput formControlName="key" placeholder="feature.flag" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Value</mat-label>
+                <input matInput formControlName="value" placeholder="true / 12 / JSON" />
+              </mat-form-field>
+              <button mat-icon-button type="button" aria-label="Remove setting" (click)="removeRow(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="org-dialog-actions" style="justify-content: space-between; margin-top: 1rem">
+          <button mat-stroked-button type="button" (click)="addRow()">
+            <mat-icon>add</mat-icon>
+            Add setting
+          </button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Save settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

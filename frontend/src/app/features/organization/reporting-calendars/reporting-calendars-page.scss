@@ -1,0 +1,23 @@
+@use '../organization-page';
+
+.org-link-btn {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--mm-heading);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.org-link-btn:hover,
+.org-link-btn--active {
+  color: var(--mm-primary, #0f766e);
+  text-decoration: underline;
+}
+
+.org-row--selected {
+  background: color-mix(in srgb, var(--mm-primary, #0f766e) 6%, transparent);
+}

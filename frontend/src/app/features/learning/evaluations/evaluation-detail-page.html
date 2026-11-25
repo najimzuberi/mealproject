@@ -1,0 +1,301 @@
+<section class="learn-page">
+  @if (loading()) {
+    <app-loading-state message="Loading evaluation…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (evaluation(); as e) {
+    <div class="learn-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to evaluations
+        </button>
+        <app-page-header [title]="e.title" [subtitle]="e.code" />
+        <div class="learn-chip-row">
+          <app-status-chip [status]="e.status" [label]="statusLabel(e.status)" />
+          <span class="learn-muted">{{ statusLabel(e.evaluation_type) }}</span>
+        </div>
+      </div>
+      <div class="learn-page__actions">
+        @if (canSubmit(e)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canReturn(e)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canApprove(e)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canComplete(e)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('complete')">
+            Complete
+          </button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="learn-card learn-card__body">
+          <div class="learn-meta">
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Programme</span>
+              <span>{{ e.programme?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Project</span>
+              <span>{{ e.project?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Period</span>
+              <span>
+                {{ e.starts_on ? (e.starts_on | date: 'mediumDate') : '—' }}
+                –
+                {{ e.ends_on ? (e.ends_on | date: 'mediumDate') : '—' }}
+              </span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Lead</span>
+              <span>{{ e.evaluation_lead?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Approved</span>
+              <span>{{ e.approved_at ? (e.approved_at | date: 'medium') : '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Completed</span>
+              <span>{{ e.completed_at ? (e.completed_at | date: 'medium') : '—' }}</span>
+            </div>
+          </div>
+
+          @if (canEdit(e)) {
+            <form class="learn-form" [formGroup]="overviewForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Purpose</mat-label>
+                <textarea matInput rows="2" formControlName="purpose"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Scope</mat-label>
+                <textarea matInput rows="2" formControlName="scope"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Methodology</mat-label>
+                <textarea matInput rows="2" formControlName="methodology"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Data collection methods</mat-label>
+                <textarea matInput rows="2" formControlName="data_collection_methods"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Target population</mat-label>
+                <input matInput formControlName="target_population" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Geographic coverage</mat-label>
+                <input matInput formControlName="geographic_coverage" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Tools</mat-label>
+                <textarea matInput rows="2" formControlName="tools"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Timeline notes</mat-label>
+                <textarea matInput rows="2" formControlName="timeline_notes"></textarea>
+              </mat-form-field>
+            </form>
+            <div class="learn-page__actions">
+              <button mat-flat-button color="primary" type="button" (click)="saveOverview()">
+                Save overview
+              </button>
+            </div>
+          } @else {
+            <div class="learn-meta">
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Purpose</span>
+                <span class="learn-summary-text">{{ e.purpose || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Scope</span>
+                <span class="learn-summary-text">{{ e.scope || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Methodology</span>
+                <span class="learn-summary-text">{{ e.methodology || '—' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Findings">
+        <div class="learn-card">
+          <div class="learn-card__header">
+            <h3 class="learn-card__title">Findings</h3>
+            @if (canEdit(e) || e.status === 'approved' || e.status === 'in_progress') {
+              <button mat-stroked-button type="button" (click)="addFinding()">
+                <mat-icon>add</mat-icon>
+                Add finding
+              </button>
+            }
+          </div>
+          <div class="learn-table-wrap">
+            @if (!findings().length) {
+              <div class="learn-card__body">
+                <app-empty-state
+                  title="No findings yet"
+                  message="Capture evidence-based findings as the evaluation progresses."
+                  icon="find_in_page"
+                />
+              </div>
+            } @else {
+              <table mat-table [dataSource]="findings()" class="learn-table">
+                <ng-container matColumnDef="reference">
+                  <th mat-header-cell *matHeaderCellDef>Ref</th>
+                  <td mat-cell *matCellDef="let row">{{ row.reference }}</td>
+                </ng-container>
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Title</th>
+                  <td mat-cell *matCellDef="let row">
+                    <div>{{ row.title }}</div>
+                    <div class="learn-muted">{{ row.description || '' }}</div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="significance">
+                  <th mat-header-cell *matHeaderCellDef>Significance</th>
+                  <td mat-cell *matCellDef="let row">{{ row.significance || '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="learn-muted">{{ row.conclusion || '' }}</span>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="findingColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: findingColumns"></tr>
+              </table>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Recommendations">
+        <div class="learn-card">
+          <div class="learn-card__header">
+            <h3 class="learn-card__title">Recommendations</h3>
+            <button mat-stroked-button type="button" (click)="addRecommendation()">
+              <mat-icon>add</mat-icon>
+              Add recommendation
+            </button>
+          </div>
+          <div class="learn-table-wrap">
+            @if (!recommendations().length) {
+              <div class="learn-card__body">
+                <app-empty-state
+                  title="No recommendations yet"
+                  message="Link recommendations to findings and capture management responses."
+                  icon="recommend"
+                />
+              </div>
+            } @else {
+              <table mat-table [dataSource]="recommendations()" class="learn-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Title</th>
+                  <td mat-cell *matCellDef="let row">
+                    <div>{{ row.title }}</div>
+                    <div class="learn-muted">{{ row.description || '' }}</div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="priority">
+                  <th mat-header-cell *matHeaderCellDef>Priority</th>
+                  <td mat-cell *matCellDef="let row">
+                    <app-status-chip
+                      [status]="row.priority || 'medium'"
+                      [label]="statusLabel(row.priority)"
+                    />
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="response">
+                  <th mat-header-cell *matHeaderCellDef>Management response</th>
+                  <td mat-cell *matCellDef="let row">
+                    @if (row.management_response_status) {
+                      <div>{{ statusLabel(row.management_response_status) }}</div>
+                      <div class="learn-muted">{{ row.management_response || '' }}</div>
+                    } @else {
+                      —
+                    }
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let row">
+                    <button mat-stroked-button type="button" (click)="respond(row)">Respond</button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="recommendationColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: recommendationColumns"></tr>
+              </table>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Actions">
+        <div class="learn-card">
+          <div class="learn-card__header">
+            <h3 class="learn-card__title">Learning actions</h3>
+            <button mat-stroked-button type="button" (click)="addAction()">
+              <mat-icon>add</mat-icon>
+              Add action
+            </button>
+          </div>
+          <div class="learn-table-wrap">
+            @if (!learningActions().length) {
+              <div class="learn-card__body">
+                <app-empty-state
+                  title="No learning actions"
+                  message="Assign follow-up actions from recommendations and findings."
+                  icon="task_alt"
+                />
+              </div>
+            } @else {
+              <table mat-table [dataSource]="learningActions()" class="learn-table">
+                <ng-container matColumnDef="description">
+                  <th mat-header-cell *matHeaderCellDef>Description</th>
+                  <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+                </ng-container>
+                <ng-container matColumnDef="due_on">
+                  <th mat-header-cell *matHeaderCellDef>Due</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.due_on ? (row.due_on | date: 'mediumDate') : '—' }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let row">
+                    <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let row">
+                    @if (row.status !== 'completed' && row.status !== 'cancelled') {
+                      <button mat-stroked-button type="button" (click)="completeAction(row)">
+                        Complete
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="actionColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: actionColumns"></tr>
+              </table>
+            }
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

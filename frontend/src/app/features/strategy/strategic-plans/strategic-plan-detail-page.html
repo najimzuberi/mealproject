@@ -1,0 +1,183 @@
+<section class="strategy-page">
+  @if (loading()) {
+    <app-loading-state message="Loading strategic plan…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (plan(); as p) {
+    <div class="strategy-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to plans
+        </button>
+        <app-page-header [title]="p.title" [subtitle]="p.code" />
+        <div class="strategy-chip-row">
+          <app-status-chip [status]="p.status" [label]="statusLabel(p.status)" />
+          @if (p.version) {
+            <span class="strategy-muted">Version {{ p.version }}</span>
+          }
+        </div>
+      </div>
+      <div class="strategy-page__actions">
+        @if (canEdit(p)) {
+          <button mat-stroked-button type="button" (click)="openEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+        @if (canSubmit(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canReturn(p)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canActivate(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('activate')">
+            Activate
+          </button>
+        }
+        @if (canArchive(p)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('archive')">Archive</button>
+        }
+        <a mat-stroked-button [routerLink]="['/app/strategy/goals']" [queryParams]="{ plan: p.id }">
+          Goals
+        </a>
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="strategy-card strategy-card__body">
+          <div class="strategy-meta">
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Period</span>
+              <span>{{ p.start_date }} → {{ p.end_date }}</span>
+            </div>
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Description</span>
+              <span>{{ p.description || '—' }}</span>
+            </div>
+            @if (p.approved_at) {
+              <div class="strategy-meta__row">
+                <span class="strategy-meta__label">Approved</span>
+                <span>{{ p.approved_at }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Direction">
+        <div class="strategy-card strategy-card__body">
+          <div class="strategy-meta">
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Vision</span>
+              <span>{{ p.vision || '—' }}</span>
+            </div>
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Mission</span>
+              <span>{{ p.mission || '—' }}</span>
+            </div>
+          </div>
+          @if (p.themes?.length) {
+            <h3 class="strategy-section-title">Themes</h3>
+            <ul>
+              @for (theme of p.themes; track theme.id ?? theme.name) {
+                <li>
+                  <strong>{{ theme.name }}</strong>
+                  @if (theme.description) {
+                    <span class="strategy-muted"> — {{ theme.description }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Goals">
+        <div class="strategy-card strategy-card__body strategy-hierarchy">
+          @if (!p.goals?.length) {
+            <app-empty-state
+              title="No goals yet"
+              message="Add goals and objectives from the Goals & Objectives page."
+              icon="track_changes"
+            />
+          } @else {
+            @for (goal of p.goals; track goal.id ?? goal.title) {
+              <mat-expansion-panel class="strategy-hierarchy__goal">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>{{ goal.code ? goal.code + ' · ' : '' }}{{ goal.title }}</mat-panel-title>
+                  <mat-panel-description>
+                    {{ goal.objectives?.length || 0 }} objective(s)
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+                @if (goal.description) {
+                  <p class="strategy-muted">{{ goal.description }}</p>
+                }
+                @for (objective of goal.objectives || []; track objective.id ?? objective.title) {
+                  <div class="strategy-hierarchy__objective">
+                    <strong>{{ objective.code ? objective.code + ' · ' : '' }}{{ objective.title }}</strong>
+                    @if (objective.description) {
+                      <p class="strategy-muted">{{ objective.description }}</p>
+                    }
+                    @for (kra of objective.kra || objective.key_result_areas || []; track kra.id ?? kra.title) {
+                      <div class="strategy-hierarchy__kra">KRA: {{ kra.title }}</div>
+                    }
+                  </div>
+                }
+              </mat-expansion-panel>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      @if (hasApprovalHistory(p)) {
+        <mat-tab label="Approval History">
+          <div class="strategy-card strategy-card__body">
+            <ul>
+              @for (entry of p.approval_history!; track entry.id ?? $index) {
+                <li>
+                  <strong>{{ entry.action || entry.status || 'Update' }}</strong>
+                  @if (entry.user_name) {
+                    <span> by {{ entry.user_name }}</span>
+                  }
+                  @if (entry.created_at) {
+                    <span class="strategy-muted"> · {{ entry.created_at }}</span>
+                  }
+                  @if (entry.comment) {
+                    <p class="strategy-muted">{{ entry.comment }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+
+      @if (hasVersions(p)) {
+        <mat-tab label="Versions">
+          <div class="strategy-card strategy-card__body">
+            <ul>
+              @for (version of p.versions!; track version.id) {
+                <li>
+                  <a [routerLink]="['/app/strategy/strategic-plans', version.id]">
+                    {{ version.title }} (v{{ version.version ?? '—' }})
+                  </a>
+                  — <app-status-chip [status]="version.status" [label]="statusLabel(version.status)" />
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</section>

@@ -1,0 +1,169 @@
+<section class="org-page">
+  <app-page-header
+    title="Reporting Calendars"
+    subtitle="Define reporting cycles and open or close periods for data submission."
+  />
+
+  <div class="org-page__toolbar">
+    <form class="org-page__filters" [formGroup]="filters" (ngSubmit)="reload()">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" placeholder="Name" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All</mat-option>
+          <mat-option value="active">Active</mat-option>
+          <mat-option value="inactive">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">Filter</button>
+    </form>
+    <button mat-flat-button color="primary" type="button" (click)="openForm()">
+      <mat-icon>add</mat-icon>
+      Add calendar
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading calendars…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (!items().length) {
+    <div class="org-card">
+      <app-empty-state
+        title="No reporting calendars yet"
+        message="Create a calendar to schedule reporting periods."
+        icon="calendar_month"
+      />
+    </div>
+  } @else {
+    <div class="org-card org-table-wrap">
+      <table mat-table [dataSource]="items()" class="org-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row">
+            <button
+              type="button"
+              class="org-link-btn"
+              [class.org-link-btn--active]="selected()?.id === row.id"
+              (click)="selectCalendar(row)"
+            >
+              {{ row.name }}
+            </button>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="frequency">
+          <th mat-header-cell *matHeaderCellDef>Frequency</th>
+          <td mat-cell *matCellDef="let row">{{ frequencyLabel(row.frequency) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row"><app-status-chip [status]="row.status" /></td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="org-actions">
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="View periods"
+                (click)="selectCalendar(row)"
+              >
+                <mat-icon>event</mat-icon>
+              </button>
+              <button mat-icon-button type="button" matTooltip="Edit" (click)="openForm(row)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          [class.org-row--selected]="selected()?.id === row.id"
+        ></tr>
+      </table>
+    </div>
+  }
+
+  @if (selected(); as calendar) {
+    <div class="org-card" style="padding: 1.25rem">
+      <div class="org-page__toolbar" style="margin-bottom: 0.75rem">
+        <div>
+          <h3 style="margin: 0; color: var(--mm-heading)">Periods — {{ calendar.name }}</h3>
+          <p class="org-muted" style="margin: 0.25rem 0 0">
+            Open periods accept submissions; close them when reporting is complete.
+          </p>
+        </div>
+        <button mat-flat-button color="primary" type="button" (click)="openPeriodForm()">
+          <mat-icon>add</mat-icon>
+          Add period
+        </button>
+      </div>
+
+      @if (periodsLoading()) {
+        <app-loading-state message="Loading periods…" />
+      } @else if (periodsError()) {
+        <app-error-state [message]="periodsError()!" (retry)="loadPeriods(calendar.id)" />
+      } @else if (!periods().length) {
+        <app-empty-state
+          title="No periods yet"
+          message="Add a period for this reporting calendar."
+          icon="event_note"
+        />
+      } @else {
+        <div class="org-table-wrap">
+          <table mat-table [dataSource]="periods()" class="org-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="starts_on">
+              <th mat-header-cell *matHeaderCellDef>Starts</th>
+              <td mat-cell *matCellDef="let row">{{ row.starts_on || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="ends_on">
+              <th mat-header-cell *matHeaderCellDef>Ends</th>
+              <td mat-cell *matCellDef="let row">{{ row.ends_on || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row"><app-status-chip [status]="row.status" /></td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let row">
+                <div class="org-actions">
+                  @if (row.status !== 'open' && row.status !== 'locked') {
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="openPeriod(row)"
+                    >
+                      Open
+                    </button>
+                  }
+                  @if (row.status === 'open') {
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="closePeriod(row)"
+                    >
+                      Close
+                    </button>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="periodColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: periodColumns"></tr>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</section>

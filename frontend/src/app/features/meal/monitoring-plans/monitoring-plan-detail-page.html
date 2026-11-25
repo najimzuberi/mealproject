@@ -1,0 +1,180 @@
+<section class="meal-page">
+  @if (loading()) {
+    <app-loading-state message="Loading monitoring plan…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (plan(); as p) {
+    <div class="meal-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to plans
+        </button>
+        <app-page-header [title]="p.title" [subtitle]="p.code" />
+        <div class="meal-chip-row">
+          <app-status-chip [status]="p.status" [label]="statusLabel(p.status)" />
+          @if (p.version) {
+            <span class="meal-muted">Version {{ p.version }}</span>
+          }
+        </div>
+      </div>
+      <div class="meal-page__actions">
+        @if (canEdit(p)) {
+          <button mat-stroked-button type="button" (click)="openEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+        @if (canSubmit(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canReturn(p)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canActivate(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('activate')">
+            Activate
+          </button>
+        }
+        @if (canArchive(p)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('archive')">Archive</button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="meal-card meal-card__body">
+          <div class="meal-meta">
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Project</span>
+              <span>
+                @if (p.project?.name) {
+                  {{ p.project?.code }} — {{ p.project?.name }}
+                } @else {
+                  #{{ p.project_id }}
+                }
+              </span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Description</span>
+              <span>{{ p.description || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Intended use</span>
+              <span>{{ p.intended_use || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Assumptions</span>
+              <span>{{ p.assumptions || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Limitations</span>
+              <span>{{ p.limitations || '—' }}</span>
+            </div>
+            @if (p.approved_at) {
+              <div class="meal-meta__row">
+                <span class="meal-meta__label">Approved</span>
+                <span>{{ p.approved_at }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Plan items">
+        <div class="meal-card">
+          @if (!p.items?.length) {
+            <app-empty-state
+              title="No indicators linked"
+              message="Edit the plan to add approved indicators and collection details."
+              icon="insights"
+            />
+          } @else {
+            <div class="meal-table-wrap">
+              <table mat-table [dataSource]="p.items!" class="meal-table">
+                <ng-container matColumnDef="indicator">
+                  <th mat-header-cell *matHeaderCellDef>Indicator</th>
+                  <td mat-cell *matCellDef="let row">
+                    <a
+                      class="meal-link"
+                      [routerLink]="['/app/meal/indicators', row.indicator_id]"
+                    >
+                      {{ indicatorLabel(row) }}
+                    </a>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="baseline_value">
+                  <th mat-header-cell *matHeaderCellDef>Baseline</th>
+                  <td mat-cell *matCellDef="let row">{{ row.baseline_value || '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="target_value">
+                  <th mat-header-cell *matHeaderCellDef>Target</th>
+                  <td mat-cell *matCellDef="let row">{{ row.target_value || '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="collection_frequency">
+                  <th mat-header-cell *matHeaderCellDef>Frequency</th>
+                  <td mat-cell *matCellDef="let row">{{ row.collection_frequency || '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="deadline">
+                  <th mat-header-cell *matHeaderCellDef>Deadline</th>
+                  <td mat-cell *matCellDef="let row">{{ row.collection_deadline || '—' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: itemColumns"></tr>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      @if (approvalEntries(p).length) {
+        <mat-tab label="Approval History">
+          <div class="meal-card meal-card__body">
+            <ul>
+              @for (entry of approvalEntries(p); track entry.id ?? $index) {
+                <li>
+                  <strong>{{ entry.action || entry.status || 'Update' }}</strong>
+                  @if (entry.user_name) {
+                    <span> by {{ entry.user_name }}</span>
+                  }
+                  @if (entry.created_at) {
+                    <span class="meal-muted"> · {{ entry.created_at }}</span>
+                  }
+                  @if (entry.comment) {
+                    <p class="meal-muted">{{ entry.comment }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+
+      @if (versions().length) {
+        <mat-tab label="Versions">
+          <div class="meal-card meal-card__body">
+            <ul>
+              @for (version of versions(); track version.id) {
+                <li>
+                  <a class="meal-link" [routerLink]="['/app/meal/monitoring-plans', version.id]">
+                    {{ version.code }} — {{ version.title }} (v{{ version.version ?? '—' }})
+                  </a>
+                  —
+                  <app-status-chip [status]="version.status" [label]="statusLabel(version.status)" />
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</section>

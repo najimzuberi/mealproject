@@ -1,0 +1,319 @@
+<section class="perf-page">
+  <app-page-header
+    title="Performance Dashboard"
+    subtitle="Track project and indicator achievement against targets."
+  />
+
+  <div class="perf-page__toolbar">
+    <form class="perf-page__filters" [formGroup]="filters" (ngSubmit)="reload()">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Programme</mat-label>
+        <mat-select formControlName="programme_id">
+          <mat-option value="">All</mat-option>
+          @for (programme of programmes(); track programme.id) {
+            <mat-option [value]="programme.id">{{ programme.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Project</mat-label>
+        <mat-select formControlName="project_id">
+          <mat-option value="">All</mat-option>
+          @for (project of projectOptions(); track project.id) {
+            <mat-option [value]="project.id">{{ project.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Reporting period</mat-label>
+        <mat-select formControlName="reporting_period_id">
+          <mat-option value="">All</mat-option>
+          @for (period of periods(); track period.id) {
+            <mat-option [value]="period.id">{{ period.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Sector</mat-label>
+        <mat-select formControlName="sector_id">
+          <mat-option value="">All</mat-option>
+          @for (sector of sectors(); track sector.id) {
+            <mat-option [value]="sector.id">{{ sector.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">
+        <mat-icon>filter_alt</mat-icon>
+        Filter
+      </button>
+    </form>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading performance dashboard…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else {
+    <section class="perf-kpi-grid" aria-label="Summary cards">
+      <app-stat-card
+        label="Projects"
+        [value]="summaryValue('projects_count')"
+        icon="work"
+        supportingText="In current filter"
+      />
+      <app-stat-card
+        label="Indicators"
+        [value]="summaryValue('indicators_count')"
+        icon="insights"
+        supportingText="With results"
+      />
+      <app-stat-card
+        label="Avg achievement"
+        [value]="summaryValue('avg_achievement_percent')"
+        icon="trending_up"
+        supportingText="Percent of target"
+      />
+      <app-stat-card
+        label="On track"
+        [value]="summaryValue('on_track_count')"
+        icon="check_circle"
+        supportingText="Performing well"
+      />
+      <app-stat-card
+        label="At risk / off track"
+        [value]="attentionCount()"
+        icon="warning"
+        supportingText="Needs attention"
+      />
+      <app-stat-card
+        label="Pending reports"
+        [value]="summaryValue('reports_pending')"
+        icon="description"
+        supportingText="Awaiting workflow"
+      />
+    </section>
+
+    <div class="perf-grid-2">
+      <div class="perf-card">
+        <div class="perf-card__header">
+          <div>
+            <h2 class="perf-card__title">Target vs achievement</h2>
+            <p class="perf-card__subtitle">Bar comparison by trend period or indicator</p>
+          </div>
+        </div>
+        <div class="perf-card__body">
+          @if (hasChartData()) {
+            <div class="perf-chart">
+              <canvas
+                baseChart
+                [type]="'bar'"
+                [data]="chartData()"
+                [options]="chartOptions"
+              ></canvas>
+            </div>
+          } @else {
+            <app-empty-state
+              title="No chart data yet"
+              message="Indicator results will appear here once performance data is available."
+              icon="bar_chart"
+            />
+          }
+        </div>
+      </div>
+
+      <div class="perf-card">
+        <div class="perf-card__header">
+          <div>
+            <h2 class="perf-card__title">Projects needing attention</h2>
+            <p class="perf-card__subtitle">Below target or flagged for follow-up</p>
+          </div>
+        </div>
+        <div class="perf-table-wrap">
+          @if (!attentionProjects().length) {
+            <div class="perf-card__body">
+              <app-empty-state
+                title="No attention items"
+                message="Projects requiring follow-up will show here."
+                icon="flag"
+              />
+            </div>
+          } @else {
+            <table mat-table [dataSource]="attentionProjects()" class="perf-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Project</th>
+                <td mat-cell *matCellDef="let row">
+                  <a class="perf-link" [routerLink]="['/app/programme/projects', row.id]">
+                    {{ row.name }}
+                  </a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="achievement">
+                <th mat-header-cell *matHeaderCellDef>Achievement</th>
+                <td mat-cell *matCellDef="let row">
+                  @if (row.achievement_percent != null) {
+                    {{ row.achievement_percent | number: '1.0-1' }}%
+                  } @else {
+                    —
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="reason">
+                <th mat-header-cell *matHeaderCellDef>Reason</th>
+                <td mat-cell *matCellDef="let row">{{ row.reason || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">
+                  @if (row.performance_status) {
+                    <app-status-chip
+                      [status]="row.performance_status"
+                      [label]="statusLabel(row.performance_status)"
+                    />
+                  } @else {
+                    —
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="attentionColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: attentionColumns"></tr>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="perf-card">
+      <div class="perf-card__header">
+        <div>
+          <h2 class="perf-card__title">Project performance</h2>
+          <p class="perf-card__subtitle">Aggregated achievement by project</p>
+        </div>
+      </div>
+      <div class="perf-table-wrap">
+        @if (!projectRows().length) {
+          <div class="perf-card__body">
+            <app-empty-state
+              title="No project performance yet"
+              message="Published indicator results will populate this table."
+              icon="work"
+            />
+          </div>
+        } @else {
+          <table mat-table [dataSource]="projectRows()" class="perf-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Project</th>
+              <td mat-cell *matCellDef="let row">
+                <a class="perf-link" [routerLink]="['/app/programme/projects', row.id]">
+                  {{ row.name }}
+                </a>
+                @if (row.code) {
+                  <div class="perf-muted">{{ row.code }}</div>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="programme">
+              <th mat-header-cell *matHeaderCellDef>Programme</th>
+              <td mat-cell *matCellDef="let row">{{ row.programme_name || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="achievement">
+              <th mat-header-cell *matHeaderCellDef>Achievement</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.achievement_percent != null) {
+                  {{ row.achievement_percent | number: '1.0-1' }}%
+                } @else {
+                  —
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.performance_status) {
+                  <app-status-chip
+                    [status]="row.performance_status"
+                    [label]="statusLabel(row.performance_status)"
+                  />
+                } @else {
+                  —
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="projectColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: projectColumns"></tr>
+          </table>
+        }
+      </div>
+    </div>
+
+    <div class="perf-card">
+      <div class="perf-card__header">
+        <div>
+          <h2 class="perf-card__title">Indicator results</h2>
+          <p class="perf-card__subtitle">Target, actual, and achievement by indicator</p>
+        </div>
+      </div>
+      <div class="perf-table-wrap">
+        @if (!indicatorRows().length) {
+          <div class="perf-card__body">
+            <app-empty-state
+              title="No indicator results"
+              message="Results appear after approved or published submissions are available."
+              icon="insights"
+            />
+          </div>
+        } @else {
+          <table mat-table [dataSource]="indicatorRows()" class="perf-table">
+            <ng-container matColumnDef="indicator">
+              <th mat-header-cell *matHeaderCellDef>Indicator</th>
+              <td mat-cell *matCellDef="let row">
+                <div>{{ row.indicator_name || '—' }}</div>
+                <div class="perf-muted">{{ row.indicator_code || '' }}</div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="project">
+              <th mat-header-cell *matHeaderCellDef>Project</th>
+              <td mat-cell *matCellDef="let row">{{ row.project_name || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="target">
+              <th mat-header-cell *matHeaderCellDef>Target</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.target != null ? (row.target | number: '1.0-2') : '—' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actual">
+              <th mat-header-cell *matHeaderCellDef>Actual</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.actual != null ? (row.actual | number: '1.0-2') : '—' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="achievement">
+              <th mat-header-cell *matHeaderCellDef>Achievement</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.achievement_percent != null) {
+                  {{ row.achievement_percent | number: '1.0-1' }}%
+                } @else {
+                  —
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.performance_status) {
+                  <app-status-chip
+                    [status]="row.performance_status"
+                    [label]="statusLabel(row.performance_status)"
+                  />
+                } @else {
+                  —
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="indicatorColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: indicatorColumns"></tr>
+          </table>
+        }
+      </div>
+    </div>
+  }
+</section>

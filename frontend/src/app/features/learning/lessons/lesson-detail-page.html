@@ -1,0 +1,153 @@
+<section class="learn-page">
+  @if (loading()) {
+    <app-loading-state message="Loading lesson…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (lesson(); as l) {
+    <div class="learn-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to lessons
+        </button>
+        <app-page-header [title]="l.title" [subtitle]="l.reference" />
+        <div class="learn-chip-row">
+          <app-status-chip [status]="l.status" [label]="statusLabel(l.status)" />
+          <span class="learn-muted">{{ l.source || 'No source' }}</span>
+        </div>
+      </div>
+      <div class="learn-page__actions">
+        @if (canSubmit(l)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(l)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canAssignAction(l)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('assign')">
+            Assign action
+          </button>
+        }
+        @if (canApply(l)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('apply')">
+            Mark applied
+          </button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="learn-card learn-card__body">
+          <div class="learn-meta">
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Programme</span>
+              <span>{{ l.programme?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Project</span>
+              <span>{{ l.project?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Evaluation</span>
+              <span>{{ l.evaluation?.title || l.evaluation?.code || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Feedback case</span>
+              <span>{{ l.feedback_case?.reference_number || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Responsible</span>
+              <span>{{ l.responsible_person?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Approved</span>
+              <span>{{ l.approved_at ? (l.approved_at | date: 'medium') : '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Applied</span>
+              <span>{{ l.applied_at ? (l.applied_at | date: 'medium') : '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Narrative">
+        <div class="learn-card learn-card__body">
+          @if (canEdit(l)) {
+            <form class="learn-form" [formGroup]="narrativeForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <textarea matInput rows="2" formControlName="description"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Context</mat-label>
+                <textarea matInput rows="2" formControlName="context"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Challenge</mat-label>
+                <textarea matInput rows="2" formControlName="challenge"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>What worked</mat-label>
+                <textarea matInput rows="2" formControlName="what_worked"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>What did not work</mat-label>
+                <textarea matInput rows="2" formControlName="what_did_not_work"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Recommendation</mat-label>
+                <textarea matInput rows="2" formControlName="recommendation"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Action required</mat-label>
+                <textarea matInput rows="2" formControlName="action_required"></textarea>
+              </mat-form-field>
+            </form>
+            <div class="learn-page__actions">
+              <button mat-flat-button color="primary" type="button" (click)="saveNarrative()">
+                Save narrative
+              </button>
+            </div>
+          } @else {
+            <div class="learn-meta">
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Description</span>
+                <span class="learn-summary-text">{{ l.description || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Context</span>
+                <span class="learn-summary-text">{{ l.context || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Challenge</span>
+                <span class="learn-summary-text">{{ l.challenge || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">What worked</span>
+                <span class="learn-summary-text">{{ l.what_worked || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">What did not</span>
+                <span class="learn-summary-text">{{ l.what_did_not_work || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Recommendation</span>
+                <span class="learn-summary-text">{{ l.recommendation || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Action required</span>
+                <span class="learn-summary-text">{{ l.action_required || '—' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

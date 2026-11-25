@@ -1,0 +1,168 @@
+<section class="meal-page">
+  <app-page-header
+    title="Data Collection"
+    subtitle="Reporting assignments, submissions, and bulk import."
+  />
+
+  <div class="meal-page__toolbar">
+    <form class="meal-page__filters" [formGroup]="filters" (ngSubmit)="reload()">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All</mat-option>
+          @for (status of submissionStatuses; track status) {
+            <mat-option [value]="status">{{ statusLabel(status) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">Filter</button>
+    </form>
+    <div class="meal-page__actions">
+      <input
+        #importInput
+        type="file"
+        hidden
+        accept=".csv,.xlsx,.xls"
+        (change)="onImportSelected($event)"
+      />
+      <button mat-stroked-button type="button" (click)="triggerImport()">
+        <mat-icon>upload_file</mat-icon>
+        Import
+      </button>
+      <button mat-stroked-button type="button" (click)="openAssignmentForm()">
+        <mat-icon>person_add</mat-icon>
+        Assignment
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="openSubmissionForm()">
+        <mat-icon>add</mat-icon>
+        Submission
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading data collection…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else {
+    @if (apiUnavailable() && !assignments().length && !submissions().length) {
+      <div class="meal-banner">
+        Data collection APIs are not available yet. This workspace will populate when
+        reporting-assignments and submissions endpoints come online.
+      </div>
+    }
+
+    <mat-tab-group>
+      <mat-tab label="Assignments">
+        @if (!assignments().length) {
+          <div class="meal-card">
+            <app-empty-state
+              title="No assignments"
+              message="Assignments are generated when monitoring plans are activated, or create one manually."
+              icon="edit_note"
+            />
+          </div>
+        } @else {
+          <div class="meal-card meal-table-wrap">
+            <table mat-table [dataSource]="assignments()" class="meal-table">
+              <ng-container matColumnDef="plan">
+                <th mat-header-cell *matHeaderCellDef>Plan</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.monitoring_plan?.title || ('#' + row.monitoring_plan_id) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="indicator">
+                <th mat-header-cell *matHeaderCellDef>Indicator</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.indicator?.name || ('Item #' + row.monitoring_plan_item_id) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="assignee">
+                <th mat-header-cell *matHeaderCellDef>Assignee</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.assigned_user_name || ('User #' + row.assigned_to) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="due_on">
+                <th mat-header-cell *matHeaderCellDef>Due</th>
+                <td mat-cell *matCellDef="let row">{{ row.due_on || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">
+                  <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                  <span class="meal-muted">#{{ row.id }}</span>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="assignmentColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: assignmentColumns"></tr>
+            </table>
+          </div>
+        }
+      </mat-tab>
+
+      <mat-tab label="Submissions">
+        @if (!submissions().length) {
+          <div class="meal-card">
+            <app-empty-state
+              title="No submissions"
+              message="Create a submission or import values for an active monitoring plan."
+              icon="fact_check"
+            />
+          </div>
+        } @else {
+          <div class="meal-card meal-table-wrap">
+            <table mat-table [dataSource]="submissions()" class="meal-table">
+              <ng-container matColumnDef="indicator">
+                <th mat-header-cell *matHeaderCellDef>Indicator</th>
+                <td mat-cell *matCellDef="let row">
+                  <a
+                    class="meal-link"
+                    [routerLink]="['/app/meal/data-collection/submissions', row.id]"
+                  >
+                    {{ row.indicator?.name || ('Indicator #' + row.indicator_id) }}
+                  </a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="plan">
+                <th mat-header-cell *matHeaderCellDef>Plan</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.monitoring_plan?.title || ('#' + row.monitoring_plan_id) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Value</th>
+                <td mat-cell *matCellDef="let row">{{ row.value ?? '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">
+                  <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="submitted_at">
+                <th mat-header-cell *matHeaderCellDef>Submitted</th>
+                <td mat-cell *matCellDef="let row">{{ row.submitted_at || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                  <button mat-icon-button type="button" matTooltip="View" (click)="viewSubmission(row)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="submissionColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: submissionColumns"></tr>
+            </table>
+          </div>
+        }
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

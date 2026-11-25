@@ -1,0 +1,463 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ | Meal Master design tokens
+ | Inspired by Angular Material component patterns
+ | (form fields, tables, progress, dialogs, snackbars)
+ | Adapted for Laravel Blade + Tailwind.
+ */
+:root {
+    --mm-color-primary: #0f6b5c;
+    --mm-color-primary-container: #d5f0ea;
+    --mm-color-on-primary: #ffffff;
+    --mm-color-secondary: #2f4a5c;
+    --mm-color-surface: #f7f9f8;
+    --mm-color-surface-container: #ffffff;
+    --mm-color-outline: #c7d2cc;
+    --mm-color-error: #b3261e;
+    --mm-color-success: #1b7f4a;
+    --mm-color-warning: #9a6700;
+    --mm-radius-sm: 4px;
+    --mm-radius-md: 8px;
+    --mm-radius-lg: 12px;
+    --mm-elevation-1: 0 1px 2px rgba(15, 40, 35, 0.08), 0 1px 3px rgba(15, 40, 35, 0.06);
+    --mm-elevation-2: 0 4px 12px rgba(15, 40, 35, 0.12);
+    --mm-font-display: "Source Serif 4", Georgia, serif;
+    --mm-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+@layer base {
+    body {
+        font-family: var(--mm-font-body);
+        background: radial-gradient(circle at top left, #e8f5f1 0%, var(--mm-color-surface) 42%, #eef2f4 100%);
+        color: #1a2b28;
+    }
+}
+
+@layer components {
+    .mm-toolbar {
+        @apply flex items-center justify-between gap-4 px-4 py-3;
+        background: var(--mm-color-surface-container);
+        box-shadow: var(--mm-elevation-1);
+        border-bottom: 1px solid var(--mm-color-outline);
+    }
+
+    .mm-form-field {
+        @apply flex flex-col gap-1.5 w-full;
+    }
+
+    .mm-form-field label {
+        @apply text-sm font-medium text-slate-700;
+    }
+
+    .mm-input {
+        @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm
+            focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/20;
+    }
+
+    .mm-table-wrap {
+        @apply overflow-x-auto rounded-lg border border-slate-200 bg-white;
+        box-shadow: var(--mm-elevation-1);
+    }
+
+    .mm-table {
+        @apply min-w-full divide-y divide-slate-200 text-sm;
+    }
+
+    .mm-table thead {
+        @apply bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600;
+    }
+
+    .mm-table th,
+    .mm-table td {
+        @apply px-4 py-3 whitespace-nowrap;
+    }
+
+    .mm-table tbody tr {
+        @apply border-t border-slate-100 hover:bg-teal-50/40 transition-colors;
+    }
+
+    .mm-progress-linear {
+        @apply h-1 w-full overflow-hidden rounded-full bg-teal-100;
+    }
+
+    .mm-progress-linear > span {
+        @apply block h-full bg-teal-700 transition-all duration-300;
+    }
+
+    .mm-spinner {
+        @apply inline-block h-5 w-5 animate-spin rounded-full border-2 border-teal-700 border-t-transparent;
+    }
+
+    .mm-snackbar {
+        @apply fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md px-4 py-3 text-sm text-white shadow-lg;
+        background: #1f2d2a;
+    }
+
+    .mm-badge {
+        @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium;
+    }
+
+    .mm-badge-success {
+        @apply bg-emerald-100 text-emerald-800;
+    }
+
+    .mm-badge-warning {
+        @apply bg-amber-100 text-amber-800;
+    }
+
+    .mm-badge-danger {
+        @apply bg-red-100 text-red-800;
+    }
+
+    .mm-badge-neutral {
+        @apply bg-slate-100 text-slate-700;
+    }
+
+    .mm-btn {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold tracking-wide transition duration-200;
+        border-radius: var(--mm-radius-md);
+    }
+
+    .mm-btn--primary {
+        background: var(--mm-color-primary);
+        color: var(--mm-color-on-primary);
+    }
+
+    .mm-btn--primary:hover {
+        background: #0c574b;
+    }
+
+    .mm-btn--ghost {
+        @apply border border-white/70 text-white bg-transparent;
+    }
+
+    .mm-btn--ghost:hover {
+        @apply bg-white/10;
+    }
+
+    .mm-btn--block {
+        @apply w-full;
+    }
+
+    .mm-brand-mark {
+        @apply inline-flex items-center gap-2.5 text-white no-underline;
+    }
+
+    .mm-brand-mark--compact {
+        color: #14352f;
+        margin-bottom: 2rem;
+    }
+
+    .mm-brand-mark__glyph {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 0.35rem;
+        background:
+            linear-gradient(145deg, #1a9b84 0%, var(--mm-color-primary) 55%, #0a4a40 100%);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .mm-brand-mark__text {
+        font-family: var(--mm-font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+}
+
+/* Landing — one full-bleed composition */
+.mm-landing {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--mm-font-body);
+    background: #0b1f1c;
+    color: #fff;
+}
+
+.mm-hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mm-hero__media {
+    position: absolute;
+    inset: 0;
+}
+
+.mm-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.04);
+    animation: mm-hero-ken 18s ease-out forwards;
+}
+
+.mm-hero__veil {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(105deg, rgba(8, 28, 24, 0.88) 0%, rgba(8, 28, 24, 0.62) 42%, rgba(8, 28, 24, 0.28) 100%),
+        linear-gradient(to top, rgba(8, 28, 24, 0.55) 0%, transparent 45%);
+}
+
+.mm-hero__nav {
+    position: relative;
+    z-index: 2;
+    padding: 1.25rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .mm-hero__nav {
+        padding: 1.75rem 3rem;
+    }
+}
+
+.mm-hero__content {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    max-width: 40rem;
+    padding: 2rem 1.5rem 3.5rem;
+}
+
+@media (min-width: 768px) {
+    .mm-hero__content {
+        padding: 3rem 3rem 4.5rem;
+        max-width: 44rem;
+    }
+}
+
+.mm-hero__brand {
+    font-family: var(--mm-font-display);
+    font-size: clamp(2.5rem, 7vw, 4.75rem);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 1.25rem;
+    animation: mm-rise 0.9s ease-out both;
+}
+
+.mm-hero__headline {
+    font-family: var(--mm-font-body);
+    font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.35;
+    margin: 0 0 0.85rem;
+    color: rgba(255, 255, 255, 0.94);
+    animation: mm-rise 0.9s ease-out 0.12s both;
+}
+
+.mm-hero__lede {
+    margin: 0 0 1.75rem;
+    max-width: 34rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(232, 245, 241, 0.86);
+    animation: mm-rise 0.9s ease-out 0.22s both;
+}
+
+.mm-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    animation: mm-rise 0.9s ease-out 0.32s both;
+}
+
+@keyframes mm-rise {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes mm-hero-ken {
+    from {
+        transform: scale(1.08);
+    }
+    to {
+        transform: scale(1.02);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mm-hero__image,
+    .mm-hero__brand,
+    .mm-hero__headline,
+    .mm-hero__lede,
+    .mm-hero__actions {
+        animation: none;
+    }
+}
+
+/* Auth / login shell */
+.mm-auth {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--mm-font-body);
+    color: #14352f;
+    background: var(--mm-color-surface);
+}
+
+.mm-auth__shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 960px) {
+    .mm-auth__shell {
+        grid-template-columns: minmax(0, 1.05fr) minmax(24rem, 0.95fr);
+    }
+}
+
+.mm-auth__stage {
+    position: relative;
+    display: none;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+@media (min-width: 960px) {
+    .mm-auth__stage {
+        display: block;
+    }
+}
+
+.mm-auth__stage-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: mm-hero-ken 20s ease-out forwards;
+}
+
+.mm-auth__stage-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(10, 42, 36, 0.82) 0%, rgba(15, 107, 92, 0.55) 55%, rgba(10, 42, 36, 0.75) 100%);
+}
+
+.mm-auth__stage-copy {
+    position: absolute;
+    left: 2.5rem;
+    right: 2.5rem;
+    bottom: 2.75rem;
+    color: #fff;
+    animation: mm-rise 0.85s ease-out both;
+}
+
+.mm-auth__stage-brand {
+    font-family: var(--mm-font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.75rem;
+}
+
+.mm-auth__stage-line {
+    margin: 0;
+    max-width: 22rem;
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: rgba(236, 247, 244, 0.9);
+}
+
+.mm-auth__panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    background:
+        radial-gradient(circle at top right, #e4f3ef 0%, transparent 42%),
+        linear-gradient(180deg, #f7faf9 0%, #eef3f1 100%);
+}
+
+.mm-auth__panel-inner {
+    width: 100%;
+    max-width: 24rem;
+    animation: mm-rise 0.7s ease-out both;
+}
+
+.mm-auth__intro {
+    margin-bottom: 1.75rem;
+}
+
+.mm-auth__title {
+    font-family: var(--mm-font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.4rem;
+    color: #12332d;
+}
+
+.mm-auth__subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #4d6761;
+}
+
+.mm-auth__form .border-t {
+    border-color: transparent !important;
+    padding-top: 0.25rem !important;
+}
+
+.mm-auth__form .justify-end {
+    justify-content: stretch !important;
+}
+
+.mm-auth__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.mm-auth__remember {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #3f5751;
+}
+
+.mm-auth__checkbox {
+    border-radius: 0.25rem;
+    border-color: #9bb5ae;
+    color: var(--mm-color-primary);
+}
+
+.mm-auth__checkbox:focus {
+    --tw-ring-color: rgba(15, 107, 92, 0.35);
+}
+
+.mm-auth__link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--mm-color-primary);
+    text-decoration: none;
+}
+
+.mm-auth__link:hover {
+    text-decoration: underline;
+}
+
+.mm-auth__footer {
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: #4d6761;
+}

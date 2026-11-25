@@ -1,0 +1,9 @@
+@use '../strategy-page';
+
+mat-tab-group {
+  margin-top: 0.25rem;
+}
+
+mat-expansion-panel {
+  box-shadow: none !important;
+}

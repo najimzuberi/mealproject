@@ -1,0 +1,20 @@
+<mat-toolbar class="toolbar">
+  <button mat-icon-button type="button" aria-label="Toggle navigation" (click)="toggleSidebar.emit()">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <div class="toolbar__breadcrumbs">
+    <app-breadcrumb />
+  </div>
+
+  <span class="toolbar__spacer"></span>
+
+  <mat-form-field appearance="outline" class="toolbar__search" subscriptSizing="dynamic">
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput placeholder="Search programmes, indicators…" [(ngModel)]="search" aria-label="Global search" />
+  </mat-form-field>
+
+  <app-organization-switcher />
+  <app-notification-menu />
+  <app-user-profile-menu />
+</mat-toolbar>

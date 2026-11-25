@@ -1,0 +1,58 @@
+@use '@angular/material' as mat;
+
+:root {
+  --mm-primary: #142b45;
+  --mm-secondary: #117c78;
+  --mm-accent: #d5ad55;
+  --mm-bg: #f5f7fa;
+  --mm-surface: #ffffff;
+  --mm-heading: #0f2238;
+  --mm-body: #5b6775;
+  --mm-border: #e3e8ef;
+  --mm-radius-md: 0.85rem;
+  --mm-shadow-sm: 0 1px 2px rgba(20, 43, 69, 0.06);
+  --mm-shadow-md: 0 10px 30px rgba(20, 43, 69, 0.08);
+}
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$cyan-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+
+  --mat-sys-primary: var(--mm-primary);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-secondary: var(--mm-secondary);
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-tertiary: var(--mm-accent);
+  --mat-sys-surface: var(--mm-surface);
+  --mat-sys-surface-container: var(--mm-bg);
+  --mat-sys-on-surface: var(--mm-heading);
+  --mat-sys-outline-variant: var(--mm-border);
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mm-bg);
+  color: var(--mm-body);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+  font-family: Roboto, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--mm-secondary);
+}

@@ -1,0 +1,42 @@
+<section class="org-page">
+  <app-page-header
+    title="Organization Settings"
+    subtitle="Configure timezone, language, currency, and date format preferences."
+  />
+
+  @if (loading()) {
+    <app-loading-state message="Loading settings…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else {
+    <div class="org-card" style="padding: 1.25rem; max-width: 40rem">
+      <form class="org-form" [formGroup]="form" (ngSubmit)="save()">
+        <mat-form-field appearance="outline">
+          <mat-label>Timezone</mat-label>
+          <input matInput formControlName="timezone" placeholder="e.g. Africa/Nairobi" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Language</mat-label>
+          <input matInput formControlName="language" placeholder="e.g. en" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Currency</mat-label>
+          <input matInput formControlName="currency" placeholder="e.g. USD" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Date format</mat-label>
+          <mat-select formControlName="date_format">
+            @for (fmt of dateFormats; track fmt) {
+              <mat-option [value]="fmt">{{ fmt }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <div class="org-dialog-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Save settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

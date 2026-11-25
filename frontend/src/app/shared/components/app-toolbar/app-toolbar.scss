@@ -1,0 +1,31 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--mm-surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--mm-border);
+  gap: 0.5rem;
+  min-height: 4rem;
+  padding-inline: 0.5rem 1rem;
+}
+
+.toolbar__spacer {
+  flex: 1;
+}
+
+.toolbar__breadcrumbs {
+  display: none;
+}
+
+.toolbar__search {
+  width: min(18rem, 34vw);
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .toolbar__breadcrumbs,
+  .toolbar__search {
+    display: block;
+  }
+}

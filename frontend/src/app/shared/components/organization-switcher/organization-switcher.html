@@ -1,0 +1,14 @@
+<button mat-stroked-button type="button" [matMenuTriggerFor]="orgMenu" class="org-btn" aria-label="Switch organization">
+  <mat-icon>business</mat-icon>
+  <span class="org-btn__label">{{ active()?.name || 'Select organization' }}</span>
+  <mat-icon>expand_more</mat-icon>
+</button>
+
+<mat-menu #orgMenu="matMenu">
+  @for (org of organizations(); track org.id) {
+    <button mat-menu-item type="button" (click)="switchTo(org)">
+      <mat-icon>{{ org.id === active()?.id ? 'check' : 'domain' }}</mat-icon>
+      <span>{{ org.name }}</span>
+    </button>
+  }
+</mat-menu>

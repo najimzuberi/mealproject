@@ -1,0 +1,218 @@
+<section class="meal-page">
+  @if (loading()) {
+    <app-loading-state message="Loading indicator…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (indicator(); as ind) {
+    <div class="meal-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to indicators
+        </button>
+        <app-page-header [title]="ind.name" [subtitle]="ind.code" />
+        <div class="meal-chip-row">
+          <app-status-chip [status]="ind.status" [label]="statusLabel(ind.status)" />
+          @if (ind.version) {
+            <span class="meal-muted">Version {{ ind.version }}</span>
+          }
+          @if (ind.result_level) {
+            <span class="meal-muted">{{ statusLabel(ind.result_level) }}</span>
+          }
+        </div>
+      </div>
+      <div class="meal-page__actions">
+        @if (canEdit(ind)) {
+          <button mat-stroked-button type="button" (click)="openEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+        @if (canSubmit(ind)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(ind)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canReturn(ind)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canRetire(ind)) {
+          <button mat-stroked-button color="warn" type="button" (click)="runWorkflow('retire')">
+            Retire
+          </button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="meal-card meal-card__body">
+          <div class="meal-meta">
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Definition</span>
+              <span>{{ ind.definition || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Description</span>
+              <span>{{ ind.description || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Unit</span>
+              <span>{{ ind.measurement_unit || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Type</span>
+              <span>{{ statusLabel(ind.indicator_type) }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Direction</span>
+              <span>{{ statusLabel(ind.direction_of_change) }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Formula</span>
+              <span>{{ ind.formula || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Data source</span>
+              <span>{{ ind.data_source || '—' }}</span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Collection</span>
+              <span>
+                {{ ind.collection_method || '—' }}
+                @if (ind.collection_frequency) {
+                  <span class="meal-muted"> · {{ ind.collection_frequency }}</span>
+                }
+              </span>
+            </div>
+            <div class="meal-meta__row">
+              <span class="meal-meta__label">Verification</span>
+              <span>{{ ind.means_of_verification || '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Baselines & Targets">
+        <div class="meal-card meal-card__body">
+          <h3 class="meal-section-title">Baselines</h3>
+          @if (!ind.baselines?.length) {
+            <p class="meal-muted">No baselines recorded.</p>
+          } @else {
+            <div class="meal-table-wrap">
+              <table mat-table [dataSource]="ind.baselines!" class="meal-table">
+                <ng-container matColumnDef="value">
+                  <th mat-header-cell *matHeaderCellDef>Value</th>
+                  <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+                </ng-container>
+                <ng-container matColumnDef="baseline_date">
+                  <th mat-header-cell *matHeaderCellDef>Date</th>
+                  <td mat-cell *matCellDef="let row">{{ row.baseline_date || '—' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="baselineColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: baselineColumns"></tr>
+              </table>
+            </div>
+          }
+
+          <h3 class="meal-section-title">Targets</h3>
+          @if (!ind.targets?.length) {
+            <p class="meal-muted">No targets recorded.</p>
+          } @else {
+            <div class="meal-table-wrap">
+              <table mat-table [dataSource]="ind.targets!" class="meal-table">
+                <ng-container matColumnDef="value">
+                  <th mat-header-cell *matHeaderCellDef>Value</th>
+                  <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+                </ng-container>
+                <ng-container matColumnDef="is_cumulative">
+                  <th mat-header-cell *matHeaderCellDef>Cumulative</th>
+                  <td mat-cell *matCellDef="let row">{{ row.is_cumulative ? 'Yes' : 'No' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="targetColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: targetColumns"></tr>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Disaggregations">
+        <div class="meal-card meal-card__body">
+          @if (!ind.disaggregations?.length) {
+            <app-empty-state
+              title="No disaggregations"
+              message="Sex, age, geography, and custom dimensions will appear here."
+              icon="tune"
+            />
+          } @else {
+            <div class="meal-table-wrap">
+              <table mat-table [dataSource]="ind.disaggregations!" class="meal-table">
+                <ng-container matColumnDef="dimension">
+                  <th mat-header-cell *matHeaderCellDef>Dimension</th>
+                  <td mat-cell *matCellDef="let row">{{ statusLabel(row.dimension) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="label">
+                  <th mat-header-cell *matHeaderCellDef>Label</th>
+                  <td mat-cell *matCellDef="let row">{{ row.label || '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="is_required">
+                  <th mat-header-cell *matHeaderCellDef>Required</th>
+                  <td mat-cell *matCellDef="let row">{{ row.is_required ? 'Yes' : 'No' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="disaggColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: disaggColumns"></tr>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      @if (approvalEntries(ind).length) {
+        <mat-tab label="Approval History">
+          <div class="meal-card meal-card__body">
+            <ul>
+              @for (entry of approvalEntries(ind); track entry.id ?? $index) {
+                <li>
+                  <strong>{{ entry.action || entry.status || 'Update' }}</strong>
+                  @if (entry.user_name) {
+                    <span> by {{ entry.user_name }}</span>
+                  }
+                  @if (entry.created_at) {
+                    <span class="meal-muted"> · {{ entry.created_at }}</span>
+                  }
+                  @if (entry.comment) {
+                    <p class="meal-muted">{{ entry.comment }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+
+      @if (versions().length) {
+        <mat-tab label="Versions">
+          <div class="meal-card meal-card__body">
+            <ul>
+              @for (version of versions(); track version.id) {
+                <li>
+                  <a class="meal-link" [routerLink]="['/app/meal/indicators', version.id]">
+                    {{ version.code }} — {{ version.name }} (v{{ version.version ?? '—' }})
+                  </a>
+                  —
+                  <app-status-chip [status]="version.status" [label]="statusLabel(version.status)" />
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</section>

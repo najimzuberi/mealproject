@@ -1,0 +1,153 @@
+<section class="learn-page">
+  @if (loading()) {
+    <app-loading-state message="Loading feedback case…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (feedbackCase(); as c) {
+    <div class="learn-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to feedback
+        </button>
+        <app-page-header [title]="c.reference_number" [subtitle]="statusLabel(c.feedback_type)" />
+        <div class="learn-chip-row">
+          <app-status-chip [status]="c.status" [label]="statusLabel(c.status)" />
+          <app-status-chip
+            [status]="c.priority || 'medium'"
+            [label]="statusLabel(c.priority)"
+          />
+          <span class="learn-muted">{{ statusLabel(c.confidentiality_level) }}</span>
+        </div>
+      </div>
+      <div class="learn-page__actions">
+        @if (canAssign(c)) {
+          <button mat-stroked-button type="button" (click)="assign()">Assign</button>
+        }
+        @if (canEscalate(c)) {
+          <button mat-stroked-button type="button" (click)="escalate()">Escalate</button>
+        }
+        @if (canResolve(c)) {
+          <button mat-flat-button color="primary" type="button" (click)="resolve()">
+            Resolve
+          </button>
+        }
+        @if (canClose(c)) {
+          <button mat-flat-button color="primary" type="button" (click)="closeCase()">Close</button>
+        }
+      </div>
+    </div>
+
+    @if (isSensitiveConfidentiality(c.confidentiality_level)) {
+      <div class="learn-banner learn-banner--warn">
+        This case is marked {{ statusLabel(c.confidentiality_level) }}. Access is limited to
+        authorized reviewers.
+      </div>
+    }
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="learn-card learn-card__body">
+          <div class="learn-meta">
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Category</span>
+              <span>{{ c.category?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Channel</span>
+              <span>{{ c.submission_channel || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Project</span>
+              <span>{{ c.project?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Submitted</span>
+              <span>{{ c.submitted_at ? (c.submitted_at | date: 'medium') : '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Deadline</span>
+              <span>
+                {{ c.resolution_deadline ? (c.resolution_deadline | date: 'mediumDate') : '—' }}
+              </span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Assignee</span>
+              <span>{{ c.assignee?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Department</span>
+              <span>{{ c.responsible_department?.name || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Escalation</span>
+              <span>Level {{ c.escalation_level ?? 0 }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Description</span>
+              <span class="learn-summary-text">{{ c.description || '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Complainant">
+        <div class="learn-card learn-card__body">
+          @if (c.is_anonymous) {
+            <div class="learn-banner">This case was submitted anonymously.</div>
+          } @else {
+            <div class="learn-meta">
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Name</span>
+                <span>{{ c.complainant_name || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Contact</span>
+                <span>{{ c.complainant_contact || '—' }}</span>
+              </div>
+              <div class="learn-meta__row">
+                <span class="learn-meta__label">Consent</span>
+                <span>{{ c.consent_given ? 'Yes' : 'No' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Resolution">
+        <div class="learn-card learn-card__body">
+          <div class="learn-meta">
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Investigation</span>
+              <span class="learn-summary-text">{{ c.investigation_notes || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Escalation reason</span>
+              <span class="learn-summary-text">{{ c.escalation_reason || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Resolution</span>
+              <span class="learn-summary-text">{{ c.resolution_description || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Action taken</span>
+              <span class="learn-summary-text">{{ c.action_taken || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Feedback loop</span>
+              <span>{{ c.feedback_loop_status || '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Resolved</span>
+              <span>{{ c.resolved_at ? (c.resolved_at | date: 'medium') : '—' }}</span>
+            </div>
+            <div class="learn-meta__row">
+              <span class="learn-meta__label">Closed</span>
+              <span>{{ c.closed_at ? (c.closed_at | date: 'medium') : '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

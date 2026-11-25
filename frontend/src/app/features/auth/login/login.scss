@@ -1,0 +1,29 @@
+.login h1 {
+  margin: 0 0 0.35rem;
+  color: var(--mm-heading);
+  font-size: 1.55rem;
+}
+
+.login__subtitle {
+  margin: 0 0 1.25rem;
+  color: var(--mm-body);
+}
+
+.full {
+  width: 100%;
+}
+
+.login__submit {
+  margin-top: 0.75rem;
+  height: 2.75rem;
+}
+
+.login__error {
+  background: #fef3f2;
+  color: #b42318;
+  border: 1px solid #fecdca;
+  border-radius: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}

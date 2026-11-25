@@ -1,0 +1,8 @@
+@use '../dashboard-widget';
+
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}

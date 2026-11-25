@@ -1,0 +1,213 @@
+<section class="perf-page">
+  <div class="perf-page__toolbar">
+    <app-page-header
+      title="Reporting Calendar"
+      subtitle="Compliance overview, open periods, and overdue tracking."
+    />
+    <div class="perf-page__actions">
+      <a mat-flat-button color="primary" routerLink="/app/organization/reporting-calendars">
+        <mat-icon>edit_calendar</mat-icon>
+        Manage calendars
+      </a>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading calendar compliance…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else {
+    <section class="perf-kpi-grid" aria-label="Compliance summary">
+      <app-stat-card
+        label="Completion"
+        [value]="completionLabel()"
+        icon="task_alt"
+        supportingText="Period submissions complete"
+      />
+      <app-stat-card
+        label="Overdue"
+        [value]="compliance().overdue_count ?? overdueRows().length"
+        icon="event_busy"
+        supportingText="Past deadline"
+      />
+      <app-stat-card
+        label="Open periods"
+        [value]="compliance().open_count ?? openPeriodRows().length"
+        icon="event_available"
+        supportingText="Currently collecting"
+      />
+      <app-stat-card
+        label="Calendars"
+        [value]="compliance().calendars_count ?? calendars().length"
+        icon="calendar_month"
+        supportingText="Configured calendars"
+      />
+    </section>
+
+    <div class="perf-grid-2">
+      <div class="perf-card">
+        <div class="perf-card__header">
+          <div>
+            <h2 class="perf-card__title">Overdue tracker</h2>
+            <p class="perf-card__subtitle">Periods past their submission deadline</p>
+          </div>
+        </div>
+        <div class="perf-table-wrap">
+          @if (!overdueRows().length) {
+            <div class="perf-card__body">
+              <app-empty-state
+                title="No overdue periods"
+                message="Overdue reporting periods will appear here when compliance data is available."
+                icon="event_busy"
+              />
+            </div>
+          } @else {
+            <table mat-table [dataSource]="overdueRows()" class="perf-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Period</th>
+                <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="calendar">
+                <th mat-header-cell *matHeaderCellDef>Calendar</th>
+                <td mat-cell *matCellDef="let row">{{ row.calendar_name || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="deadline">
+                <th mat-header-cell *matHeaderCellDef>Deadline</th>
+                <td mat-cell *matCellDef="let row">
+                  {{
+                    row.submission_deadline
+                      ? (row.submission_deadline | date: 'mediumDate')
+                      : row.ends_on
+                        ? (row.ends_on | date: 'mediumDate')
+                        : '—'
+                  }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">
+                  <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="days">
+                <th mat-header-cell *matHeaderCellDef>Days overdue</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.days_overdue != null ? (row.days_overdue | number: '1.0-0') : '—' }}
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="periodColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: periodColumns"></tr>
+            </table>
+          }
+        </div>
+      </div>
+
+      <div class="perf-card">
+        <div class="perf-card__header">
+          <div>
+            <h2 class="perf-card__title">Open periods</h2>
+            <p class="perf-card__subtitle">Active collection windows</p>
+          </div>
+        </div>
+        <div class="perf-table-wrap">
+          @if (!openPeriodRows().length) {
+            <div class="perf-card__body">
+              <app-empty-state
+                title="No open periods"
+                message="Open periods from the compliance API will list here."
+                icon="event_available"
+              />
+            </div>
+          } @else {
+            <table mat-table [dataSource]="openPeriodRows()" class="perf-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Period</th>
+                <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="calendar">
+                <th mat-header-cell *matHeaderCellDef>Calendar</th>
+                <td mat-cell *matCellDef="let row">{{ row.calendar_name || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="deadline">
+                <th mat-header-cell *matHeaderCellDef>Deadline</th>
+                <td mat-cell *matCellDef="let row">
+                  {{
+                    row.submission_deadline
+                      ? (row.submission_deadline | date: 'mediumDate')
+                      : row.ends_on
+                        ? (row.ends_on | date: 'mediumDate')
+                        : '—'
+                  }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">
+                  <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="days">
+                <th mat-header-cell *matHeaderCellDef>Days left</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.days_overdue != null ? (row.days_overdue | number: '1.0-0') : '—' }}
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="periodColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: periodColumns"></tr>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="perf-card">
+      <div class="perf-card__header">
+        <div>
+          <h2 class="perf-card__title">Configured calendars</h2>
+          <p class="perf-card__subtitle">
+            Full create, edit, and period management lives on the organization page.
+          </p>
+        </div>
+        <a mat-stroked-button routerLink="/app/organization/reporting-calendars">
+          Open full CRUD
+        </a>
+      </div>
+      <div class="perf-table-wrap">
+        @if (!calendars().length) {
+          <div class="perf-card__body">
+            <app-empty-state
+              title="No reporting calendars"
+              message="Create calendars from Organization → Reporting Calendars."
+              icon="calendar_month"
+            />
+          </div>
+        } @else {
+          <table mat-table [dataSource]="calendars()" class="perf-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="frequency">
+              <th mat-header-cell *matHeaderCellDef>Frequency</th>
+              <td mat-cell *matCellDef="let row">{{ statusLabel(row.frequency) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="periods">
+              <th mat-header-cell *matHeaderCellDef>Periods</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.periods?.length ?? '—' }}
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="calendarColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: calendarColumns"></tr>
+          </table>
+        }
+      </div>
+    </div>
+  }
+</section>

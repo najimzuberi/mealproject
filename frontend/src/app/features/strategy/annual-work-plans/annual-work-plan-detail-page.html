@@ -1,0 +1,183 @@
+<section class="strategy-page">
+  @if (loading()) {
+    <app-loading-state message="Loading annual work plan…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (awp(); as a) {
+    <div class="strategy-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to AWPs
+        </button>
+        <app-page-header [title]="a.title" [subtitle]="a.code" />
+        <div class="strategy-chip-row">
+          <app-status-chip [status]="a.status" [label]="statusLabel(a.status)" />
+          <span class="strategy-muted">{{ a.planning_year }}</span>
+          @if (a.version) {
+            <span class="strategy-muted">Version {{ a.version }}</span>
+          }
+        </div>
+      </div>
+      <div class="strategy-page__actions">
+        @if (canEdit(a)) {
+          <button mat-stroked-button type="button" (click)="openEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+        @if (canSubmit(a)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(a)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canReturn(a)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canActivate(a)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('activate')">
+            Activate
+          </button>
+        }
+        @if (canArchive(a)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('archive')">Archive</button>
+        }
+        <a
+          mat-stroked-button
+          [routerLink]="['/app/strategy/strategic-plans', a.strategic_plan_id]"
+        >
+          Strategic plan
+        </a>
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="strategy-card strategy-card__body">
+          <div class="strategy-meta">
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Strategic plan</span>
+              <span>{{ planLabel(a) }}</span>
+            </div>
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Planning year</span>
+              <span>{{ a.planning_year }}</span>
+            </div>
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Description</span>
+              <span>{{ a.description || '—' }}</span>
+            </div>
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Priorities</span>
+              <span>{{ a.priorities?.length || 0 }}</span>
+            </div>
+            <div class="strategy-meta__row">
+              <span class="strategy-meta__label">Activities</span>
+              <span>{{ activityCount(a) }}</span>
+            </div>
+            @if (a.approved_at) {
+              <div class="strategy-meta__row">
+                <span class="strategy-meta__label">Approved</span>
+                <span>{{ a.approved_at }}</span>
+              </div>
+            }
+          </div>
+          <div class="strategy-budget">
+            <span class="strategy-muted">Budget estimate</span>
+            <span class="strategy-budget__value">
+              {{ (a.budget_summary?.total ?? sumBudgetEstimate(a)) | number: '1.0-2' }}
+              @if (a.budget_summary?.currency) {
+                {{ a.budget_summary?.currency }}
+              }
+            </span>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Priorities & Activities">
+        <div class="strategy-card strategy-card__body strategy-hierarchy">
+          @if (!a.priorities?.length) {
+            <app-empty-state
+              title="No priorities yet"
+              message="Add priorities linked to strategic objectives when editing this AWP."
+              icon="event_note"
+            />
+          } @else {
+            @for (priority of a.priorities; track priority.id ?? priority.title) {
+              <mat-expansion-panel class="strategy-hierarchy__goal">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>{{ priority.title }}</mat-panel-title>
+                  <mat-panel-description>
+                    {{ priority.activities?.length || 0 }} activit{{
+                      (priority.activities?.length || 0) === 1 ? 'y' : 'ies'
+                    }}
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+                @if (priority.description) {
+                  <p class="strategy-muted">{{ priority.description }}</p>
+                }
+                @for (activity of priority.activities || []; track activity.id ?? activity.title) {
+                  <div class="strategy-hierarchy__objective">
+                    <strong>{{ activity.title }}</strong>
+                    @if (activity.description) {
+                      <p class="strategy-muted">{{ activity.description }}</p>
+                    }
+                    <div class="strategy-chip-row">
+                      @if (activity.deliverable) {
+                        <span class="strategy-muted">Deliverable: {{ activity.deliverable }}</span>
+                      }
+                      @if (activity.budget_estimate != null && activity.budget_estimate !== '') {
+                        <span class="strategy-muted">Budget: {{ activity.budget_estimate }}</span>
+                      }
+                      @if (activity.starts_on || activity.ends_on) {
+                        <span class="strategy-muted">
+                          {{ activity.starts_on || '—' }} → {{ activity.ends_on || '—' }}
+                        </span>
+                      }
+                    </div>
+                    @for (milestone of activity.milestones || []; track milestone.id ?? milestone.title) {
+                      <div class="strategy-hierarchy__kra">
+                        {{ milestone.quarter }}: {{ milestone.title }}
+                        @if (milestone.due_on) {
+                          <span class="strategy-muted"> (due {{ milestone.due_on }})</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </mat-expansion-panel>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      @if (hasApprovalHistory(a)) {
+        <mat-tab label="Approval History">
+          <div class="strategy-card strategy-card__body">
+            <ul>
+              @for (entry of a.approval_history!; track entry.id ?? $index) {
+                <li>
+                  <strong>{{ entry.action || entry.status || 'Update' }}</strong>
+                  @if (entry.user_name) {
+                    <span> by {{ entry.user_name }}</span>
+                  }
+                  @if (entry.created_at) {
+                    <span class="strategy-muted"> · {{ entry.created_at }}</span>
+                  }
+                  @if (entry.comment) {
+                    <p class="strategy-muted">{{ entry.comment }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</section>

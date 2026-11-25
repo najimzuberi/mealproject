@@ -1,0 +1,115 @@
+<section class="strategy-page">
+  <app-page-header
+    title="Goals & Objectives"
+    subtitle="Manage the results hierarchy nested under a strategic plan."
+  />
+
+  <div class="strategy-page__toolbar">
+    <form class="strategy-page__filters" [formGroup]="filters">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Strategic plan</mat-label>
+        <mat-select formControlName="planId" (selectionChange)="onPlanChange()">
+          @for (plan of plans(); track plan.id) {
+            <mat-option [value]="plan.id">{{ plan.code }} — {{ plan.title }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+    @if (selectedPlan() && canEdit()) {
+      <button mat-flat-button color="primary" type="button" (click)="openGoalForm()">
+        <mat-icon>add</mat-icon>
+        Add goal
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Loading goals…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (!plans().length) {
+    <div class="strategy-card">
+      <app-empty-state
+        title="No strategic plans"
+        message="Create a strategic plan first, then add goals and objectives."
+        icon="flag"
+      />
+    </div>
+  } @else if (selectedPlan(); as plan) {
+    <div class="strategy-chip-row">
+      <app-status-chip [status]="plan.status" />
+      <span class="strategy-muted">{{ plan.start_date }} → {{ plan.end_date }}</span>
+    </div>
+
+    @if (!plan.goals?.length) {
+      <div class="strategy-card">
+        <app-empty-state
+          title="No goals yet"
+          message="Add a goal to start building the objectives hierarchy."
+          icon="track_changes"
+        />
+      </div>
+    } @else {
+      <div class="strategy-hierarchy">
+        @for (goal of plan.goals; track goal.id ?? goal.title) {
+          <mat-expansion-panel class="strategy-hierarchy__goal" [expanded]="true">
+            <mat-expansion-panel-header>
+              <mat-panel-title>{{ goal.code ? goal.code + ' · ' : '' }}{{ goal.title }}</mat-panel-title>
+              <mat-panel-description>
+                {{ goal.objectives?.length || 0 }} objective(s)
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            @if (goal.description) {
+              <p class="strategy-muted">{{ goal.description }}</p>
+            }
+            @if (goal.expected_result) {
+              <p class="strategy-muted">Expected: {{ goal.expected_result }}</p>
+            }
+
+            <div class="strategy-page__actions" style="margin-bottom: 0.75rem">
+              @if (canEdit()) {
+                <button mat-stroked-button type="button" (click)="openGoalForm(goal)">
+                  <mat-icon>edit</mat-icon>
+                  Edit goal
+                </button>
+                <button mat-stroked-button type="button" (click)="openObjectiveForm(goal)">
+                  <mat-icon>add</mat-icon>
+                  Add objective
+                </button>
+              }
+            </div>
+
+            @for (objective of goal.objectives || []; track objective.id ?? objective.title) {
+              <div class="strategy-hierarchy__objective">
+                <div class="strategy-page__toolbar">
+                  <div>
+                    <strong>{{ objective.code ? objective.code + ' · ' : '' }}{{ objective.title }}</strong>
+                    @if (objective.description) {
+                      <p class="strategy-muted">{{ objective.description }}</p>
+                    }
+                  </div>
+                  @if (canEdit()) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      matTooltip="Edit objective"
+                      (click)="openObjectiveForm(goal, objective)"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                </div>
+                @for (kra of objective.kra || objective.key_result_areas || []; track kra.id ?? kra.title) {
+                  <div class="strategy-hierarchy__kra">KRA: {{ kra.title }}</div>
+                }
+              </div>
+            } @empty {
+              <p class="strategy-muted">No objectives under this goal yet.</p>
+            }
+          </mat-expansion-panel>
+        }
+      </div>
+    }
+  }
+</section>

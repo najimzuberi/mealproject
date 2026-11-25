@@ -1,0 +1,99 @@
+<div class="dashboard">
+  <section class="dashboard__welcome" aria-label="Welcome">
+    <div class="dashboard__welcome-copy">
+      <h1>Welcome back, {{ auth.user()?.name }}</h1>
+      <p>Here's an overview of your organization's performance and activities.</p>
+      <div class="dashboard__welcome-meta">
+        <span class="dashboard__org">{{ auth.activeOrganization()?.name || 'No organization selected' }}</span>
+        <span class="dashboard__dot" aria-hidden="true">·</span>
+        <span>{{ today | date: 'fullDate' }}</span>
+      </div>
+    </div>
+
+    <div class="dashboard__welcome-filters">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="dashboard__period">
+        <mat-label>Reporting period</mat-label>
+        <mat-select [(value)]="period" aria-label="Reporting period">
+          <mat-option value="current">Current period</mat-option>
+          <mat-option value="previous">Previous period</mat-option>
+          <mat-option value="ytd">Year to date</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <app-loading-state message="Loading dashboard…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (data(); as overview) {
+    <section class="dashboard__section" aria-label="Key performance indicators">
+      <div class="kpi-grid">
+        <app-stat-card
+          label="Total Projects"
+          [value]="overview.kpis.total_projects"
+          icon="work"
+          supportingText="Organization projects"
+          (clicked)="go('/app/coming-soon/projects')"
+        />
+        <app-stat-card
+          label="Active Projects"
+          [value]="overview.kpis.active_projects"
+          icon="rocket_launch"
+          supportingText="Currently in progress"
+          (clicked)="go('/app/coming-soon/projects')"
+        />
+        <app-stat-card
+          label="Strategic Plans"
+          [value]="overview.kpis.strategic_plans"
+          icon="flag"
+          supportingText="Approved and draft plans"
+          (clicked)="go('/app/coming-soon/strategic-plans')"
+        />
+        <app-stat-card
+          label="Active Indicators"
+          [value]="overview.kpis.active_indicators"
+          icon="insights"
+          supportingText="Tracked performance metrics"
+          (clicked)="go('/app/coming-soon/indicators')"
+        />
+        <app-stat-card
+          label="Monitoring Plans"
+          [value]="overview.kpis.monitoring_plans"
+          icon="assignment"
+          supportingText="Active monitoring coverage"
+          (clicked)="go('/app/coming-soon/monitoring-plans')"
+        />
+        <app-stat-card
+          label="Pending Approvals"
+          [value]="overview.kpis.pending_approvals"
+          icon="pending_actions"
+          supportingText="Items awaiting review"
+          (clicked)="go('/app/coming-soon/strategic-plans')"
+        />
+      </div>
+    </section>
+
+    <section class="dashboard__section" aria-label="Analytics overview">
+      <div class="analytics-grid">
+        <app-project-status-widget [status]="overview.project_status" />
+        <app-objectives-progress-widget
+          [available]="overview.objectives_progress.available"
+          [message]="overview.objectives_progress.message"
+        />
+        <app-indicator-performance-widget
+          [available]="overview.indicator_performance.available"
+          [message]="overview.indicator_performance.message"
+        />
+        <app-reporting-calendar-widget [periods]="overview.reporting_periods" />
+      </div>
+    </section>
+
+    <section class="dashboard__section" aria-label="Operational overview">
+      <div class="ops-grid">
+        <app-pending-tasks-widget [tasks]="overview.pending_tasks" />
+        <app-recent-activities-widget [activities]="overview.recent_activities" />
+      </div>
+    </section>
+  }
+</div>

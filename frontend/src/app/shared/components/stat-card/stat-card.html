@@ -1,0 +1,39 @@
+<mat-card
+  appearance="outlined"
+  class="stat-card"
+  [class.stat-card--clickable]="!unavailable()"
+  [class.stat-card--unavailable]="unavailable()"
+  [attr.role]="unavailable() ? 'group' : 'button'"
+  [attr.tabindex]="unavailable() ? -1 : 0"
+  [attr.aria-disabled]="unavailable()"
+  [matTooltip]="hint() || label()"
+  (click)="onActivate()"
+  (keydown.enter)="onActivate()"
+  (keydown.space)="$event.preventDefault(); onActivate()"
+>
+  <div class="stat-card__icon" aria-hidden="true">
+    <mat-icon>{{ icon() }}</mat-icon>
+  </div>
+
+  <div class="stat-card__value">
+    @if (loading()) {
+      …
+    } @else if (unavailable()) {
+      N/A
+    } @else {
+      {{ value() }}
+    }
+  </div>
+
+  <div class="stat-card__label">{{ label() }}</div>
+
+  @if (supportingText()) {
+    <div class="stat-card__support">{{ supportingText() }}</div>
+  }
+
+  @if (trend()) {
+    <div class="stat-card__trend" [class.stat-card__trend--up]="trend()!.startsWith('+')" [class.stat-card__trend--down]="trend()!.startsWith('-')">
+      {{ trend() }}
+    </div>
+  }
+</mat-card>

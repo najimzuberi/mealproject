@@ -1,0 +1,53 @@
+@use '../dashboard-widget';
+
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.period-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.period-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.7rem;
+  background: #f8fafc;
+}
+
+.period-list__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.period-list__copy strong {
+  color: #172b43;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.period-list__copy span {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.period-list__chip {
+  flex: 0 0 auto;
+  min-height: 1.6rem !important;
+  font-size: 0.72rem !important;
+}

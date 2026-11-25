@@ -1,0 +1,169 @@
+.strategy-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.strategy-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.strategy-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  flex: 1;
+}
+
+.strategy-page__filters .mat-mdc-form-field {
+  width: min(100%, 16rem);
+}
+
+.strategy-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.strategy-card {
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  box-shadow: var(--mm-shadow-sm);
+  overflow: hidden;
+}
+
+.strategy-card__body {
+  padding: 1rem 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.strategy-table-wrap {
+  overflow: auto;
+}
+
+table.strategy-table {
+  width: 100%;
+}
+
+.strategy-table th {
+  color: var(--mm-heading);
+  font-weight: 650;
+}
+
+.strategy-actions {
+  display: inline-flex;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.strategy-form {
+  display: grid;
+  gap: 0.35rem;
+  min-width: min(100%, 28rem);
+  padding-top: 0.25rem;
+}
+
+.strategy-form--wide {
+  min-width: min(100%, 40rem);
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.strategy-form--wide .full-width {
+  grid-column: 1 / -1;
+}
+
+.strategy-form mat-form-field {
+  width: 100%;
+}
+
+.strategy-muted {
+  color: var(--mm-body);
+  font-size: 0.875rem;
+}
+
+.strategy-meta {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.strategy-meta__row {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.strategy-meta__label {
+  color: var(--mm-body);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.strategy-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.strategy-section-title {
+  margin: 0;
+  color: var(--mm-heading);
+  font-size: 1.05rem;
+}
+
+.strategy-hierarchy {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.strategy-hierarchy__goal {
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  overflow: hidden;
+}
+
+.strategy-hierarchy__objective {
+  padding: 0.5rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--mm-border) 70%, transparent);
+}
+
+.strategy-hierarchy__kra {
+  margin: 0.35rem 0 0.15rem 1rem;
+  color: var(--mm-body);
+  font-size: 0.85rem;
+}
+
+.strategy-budget {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.strategy-budget__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--mm-heading);
+}
+
+@media (max-width: 720px) {
+  .strategy-form--wide {
+    grid-template-columns: 1fr;
+  }
+
+  .strategy-meta__row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}

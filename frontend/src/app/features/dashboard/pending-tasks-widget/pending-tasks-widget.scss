@@ -1,0 +1,47 @@
+@use '../dashboard-widget';
+
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.approval-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.approval-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.7rem;
+  background: #f8fafc;
+}
+
+.approval-list__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.approval-list__copy strong {
+  color: #172b43;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.approval-list__copy span {
+  color: #64748b;
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}

@@ -1,0 +1,11 @@
+.org-btn {
+  max-width: 16rem;
+  border-color: var(--mm-border) !important;
+}
+
+.org-btn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 10rem;
+}

@@ -1,0 +1,138 @@
+.org-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.org-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.org-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  flex: 1;
+}
+
+.org-page__filters .mat-mdc-form-field {
+  width: min(100%, 16rem);
+}
+
+.org-card {
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  box-shadow: var(--mm-shadow-sm);
+  overflow: hidden;
+}
+
+.org-table-wrap {
+  overflow: auto;
+}
+
+table.org-table {
+  width: 100%;
+}
+
+.org-table th {
+  color: var(--mm-heading);
+  font-weight: 650;
+}
+
+.org-actions {
+  display: inline-flex;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.org-form {
+  display: grid;
+  gap: 0.35rem;
+  min-width: min(100%, 28rem);
+  padding-top: 0.25rem;
+}
+
+.org-form--wide {
+  min-width: min(100%, 36rem);
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.org-form--wide .full-width {
+  grid-column: 1 / -1;
+}
+
+.org-form mat-form-field {
+  width: 100%;
+}
+
+.org-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.org-muted {
+  color: var(--mm-body);
+  font-size: 0.875rem;
+}
+
+.org-profile-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 960px) {
+  .org-profile-grid {
+    grid-template-columns: 1.4fr 0.8fr;
+  }
+}
+
+.org-profile-logo {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+
+.org-profile-logo img {
+  width: 7.5rem;
+  height: 7.5rem;
+  object-fit: cover;
+  border-radius: 1rem;
+  border: 1px solid var(--mm-border);
+  background: #f8fafc;
+}
+
+.org-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.org-settings-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.org-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr auto;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .org-settings-row {
+    grid-template-columns: 1fr;
+  }
+
+  .org-form--wide {
+    grid-template-columns: 1fr;
+  }
+}

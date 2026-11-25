@@ -1,0 +1,289 @@
+<section class="programme-page">
+  @if (loading()) {
+    <app-loading-state message="Loading project…" />
+  } @else if (error()) {
+    <app-error-state [message]="error()!" (retry)="reload()" />
+  } @else if (project(); as p) {
+    <div class="programme-page__toolbar">
+      <div>
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to projects
+        </button>
+        <app-page-header [title]="p.name" [subtitle]="p.code" />
+        <div class="programme-chip-row">
+          <app-status-chip [status]="p.status" [label]="statusLabel(p.status)" />
+        </div>
+      </div>
+      <div class="programme-page__actions">
+        @if (canEdit(p)) {
+          <button mat-stroked-button type="button" (click)="openEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+        @if (canSubmit(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('submit')">
+            Submit
+          </button>
+        }
+        @if (canApprove(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('approve')">
+            Approve
+          </button>
+        }
+        @if (canReturn(p)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('return')">Return</button>
+        }
+        @if (canActivate(p)) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow('activate')">
+            Activate
+          </button>
+        }
+        @if (canArchive(p)) {
+          <button mat-stroked-button type="button" (click)="runWorkflow('archive')">Archive</button>
+        }
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="programme-card programme-card__body">
+          <div class="programme-meta">
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Programme</span>
+              <span>
+                @if (p.programme_id) {
+                  <a class="programme-link" [routerLink]="['/app/programme/programmes', p.programme_id]">
+                    {{ programmeName(p) }}
+                  </a>
+                } @else {
+                  —
+                }
+              </span>
+            </div>
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Period</span>
+              <span>{{ p.starts_on }} → {{ p.ends_on }}</span>
+            </div>
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Budget</span>
+              <span>{{ formatBudget(p.budget, p.currency) }}</span>
+            </div>
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Funding</span>
+              <span>{{ p.funding_source || p.donor_name || '—' }}</span>
+            </div>
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Description</span>
+              <span>{{ p.description || '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Team">
+        <div class="programme-card programme-card__body">
+          <form [formGroup]="teamForm" (ngSubmit)="saveTeam()">
+            <div formArrayName="members">
+              @for (group of members.controls; track $index; let i = $index) {
+                <div class="programme-team-row" [formGroupName]="i">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>User</mat-label>
+                    <mat-select formControlName="user_id">
+                      @for (user of users(); track user.id) {
+                        <mat-option [value]="user.id">{{ user.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Role</mat-label>
+                    <input matInput formControlName="role_label" placeholder="e.g. MEAL Officer" />
+                  </mat-form-field>
+                  <button mat-icon-button type="button" (click)="removeTeamMember(i)" matTooltip="Remove">
+                    <mat-icon>remove_circle</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <div class="programme-page__actions">
+              <button mat-stroked-button type="button" (click)="addTeamMember()">
+                <mat-icon>person_add</mat-icon>
+                Add member
+              </button>
+              <button mat-flat-button color="primary" type="submit">Save team</button>
+            </div>
+          </form>
+
+          <h3 class="programme-section-title">Geographic coverage</h3>
+          <form [formGroup]="geoForm" (ngSubmit)="saveGeo()">
+            <mat-form-field appearance="outline" class="full-width" style="width: 100%">
+              <mat-label>Geographic units</mat-label>
+              <mat-select formControlName="geographic_unit_ids" multiple>
+                @for (unit of geoUnits(); track unit.id) {
+                  <mat-option [value]="unit.id">{{ unit.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="submit">Save geography</button>
+          </form>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Timeline / Activities">
+        <div class="programme-card">
+          @if (!p.activities?.length) {
+            <app-empty-state
+              title="No activities yet"
+              message="Activities can be added when creating or updating the project."
+              icon="timeline"
+            />
+          } @else {
+            <div class="programme-table-wrap">
+              <table mat-table [dataSource]="p.activities!" class="programme-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Activity</th>
+                  <td mat-cell *matCellDef="let row">{{ row.title }}</td>
+                </ng-container>
+                <ng-container matColumnDef="period">
+                  <th mat-header-cell *matHeaderCellDef>Period</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.starts_on || '—' }} → {{ row.ends_on || '—' }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let row">
+                    @if (row.status) {
+                      <app-status-chip [status]="row.status" [label]="statusLabel(row.status)" />
+                    } @else {
+                      —
+                    }
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="activityColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: activityColumns"></tr>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Budget">
+        <div class="programme-card programme-card__body">
+          <div class="programme-budget">
+            <span class="programme-muted">Total budget</span>
+            <span class="programme-budget__value">{{ formatBudget(p.budget, p.currency) }}</span>
+          </div>
+          <div class="programme-meta">
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Funding source</span>
+              <span>{{ p.funding_source || '—' }}</span>
+            </div>
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Donor</span>
+              <span>{{ p.donor_name || '—' }}</span>
+            </div>
+            <div class="programme-meta__row">
+              <span class="programme-meta__label">Donor info</span>
+              <span>{{ p.donor_information || '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Risks">
+        <div class="programme-card">
+          @if (!p.risks?.length && !p.assumptions?.length) {
+            <app-empty-state
+              title="No risks or assumptions"
+              message="Risks and assumptions can be captured when creating or updating the project."
+              icon="warning"
+            />
+          } @else {
+            @if (p.risks?.length) {
+              <div class="programme-card__body">
+                <h3 class="programme-section-title">Risks</h3>
+              </div>
+              <div class="programme-table-wrap">
+                <table mat-table [dataSource]="p.risks!" class="programme-table">
+                  <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef>Description</th>
+                    <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="likelihood">
+                    <th mat-header-cell *matHeaderCellDef>Likelihood</th>
+                    <td mat-cell *matCellDef="let row">{{ row.likelihood || '—' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="impact">
+                    <th mat-header-cell *matHeaderCellDef>Impact</th>
+                    <td mat-cell *matCellDef="let row">{{ row.impact || '—' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="mitigation">
+                    <th mat-header-cell *matHeaderCellDef>Mitigation</th>
+                    <td mat-cell *matCellDef="let row">{{ row.mitigation || '—' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let row">{{ row.status || '—' }}</td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="riskColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: riskColumns"></tr>
+                </table>
+              </div>
+            }
+            @if (p.assumptions?.length) {
+              <div class="programme-card__body">
+                <h3 class="programme-section-title">Assumptions</h3>
+                <ul>
+                  @for (assumption of p.assumptions!; track assumption.id ?? $index) {
+                    <li>{{ assumption.description }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Results Framework">
+        <div class="programme-card programme-card__body">
+          @if (!frameworks().length) {
+            <app-empty-state
+              title="No results framework"
+              message="Create a results framework for this project to define impact, outcomes, and outputs."
+              icon="account_tree"
+            />
+            <a
+              mat-flat-button
+              color="primary"
+              [routerLink]="['/app/programme/results-frameworks']"
+              [queryParams]="{ project: p.id }"
+            >
+              <mat-icon>add</mat-icon>
+              Create framework
+            </a>
+          } @else {
+            <ul>
+              @for (fw of frameworks(); track fw.id) {
+                <li>
+                  <a class="programme-link" [routerLink]="['/app/programme/results-frameworks', fw.id]">
+                    {{ fw.title }}
+                  </a>
+                  <app-status-chip [status]="fw.status" [label]="statusLabel(fw.status)" />
+                </li>
+              }
+            </ul>
+            <a
+              mat-stroked-button
+              [routerLink]="['/app/programme/results-frameworks']"
+              [queryParams]="{ project: p.id }"
+            >
+              Manage frameworks
+            </a>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>
